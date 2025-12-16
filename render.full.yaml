@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: stratagem-ai
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: pip install --no-cache-dir -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: PINECONE_ENVIRONMENT
+        sync: false
+      - key: PINECONE_INDEX_NAME
+        sync: false
+      - key: NEWSAPI_KEY
+        sync: false
+      - key: LOG_LEVEL
+        sync: false
+      - key: PYTHON_VERSION
+        sync: false
+      - key: KMP_DUPLICATE_LIB_OK
+        sync: false

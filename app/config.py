@@ -76,9 +76,9 @@ class Settings(BaseSettings):
         default="0.0.0.0", 
         description="API host (must be 0.0.0.0 for Render)"
     )
-    api_port: int = Field(
-        default_factory=lambda: int(os.getenv("PORT", "8000")),
-        description="API port (reads from PORT env var for Render)"
+    port: int = Field(
+        default=8000,
+        description="API port (Pydantic reads from PORT env var automatically)"
     )
     cors_origins: list[str] = Field(
         default=["*"],
