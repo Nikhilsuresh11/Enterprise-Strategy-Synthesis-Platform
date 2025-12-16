@@ -1,5 +1,6 @@
 """Configuration management using Pydantic Settings."""
 
+import os
 from functools import lru_cache
 from typing import Optional
 
@@ -70,10 +71,15 @@ class Settings(BaseSettings):
         description="Maximum number of concurrent agent executions"
     )
     
-    # Optional Configuration
-    api_host: str = Field(default="0.0.0.0", description="API host")
-    api_port: int = Field(default=5000, description="API port")
-    port: int = Field(default=5000, description="Port (for Render deployment)")
+    # API Configuration - Render Compatible
+    api_host: str = Field(
+        default="0.0.0.0", 
+        description="API host (must be 0.0.0.0 for Render)"
+    )
+    api_port: int = Field(
+        default_factory=lambda: int(os.getenv("PORT", "8000")),
+        description="API port (reads from PORT env var for Render)"
+    )
     cors_origins: list[str] = Field(
         default=["*"],
         description="Allowed CORS origins"
