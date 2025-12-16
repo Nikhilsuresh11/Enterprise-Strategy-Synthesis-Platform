@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     
     # MongoDB Configuration
     mongodb_uri: str = Field(
-        default="mongodb+srv://nikhilsuresh86:tUc0awg0LCSEBuiQ@stock-agent.uydbqve.mongodb.net/?appName=stock-agent",
+        ...,
         description="MongoDB connection URI"
     )
     mongodb_db_name: str = Field(
