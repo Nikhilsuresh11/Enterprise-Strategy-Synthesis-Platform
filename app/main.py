@@ -51,12 +51,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         )
         await db_service.connect()
         
-        rag_service = RAGService(
-            api_key=settings.pinecone_api_key,
-            environment=settings.pinecone_environment,
-            index_name=settings.pinecone_index_name
-        )
-        await rag_service.connect()
+        # Initialize RAG service (lazy - may fail if PyTorch not available)
+        rag_service = None
+        try:
+            logger.info("initializing_rag_service")
+            rag_service = RAGService(
+                api_key=settings.pinecone_api_key,
+                environment=settings.pinecone_environment,
+                index_name=settings.pinecone_index_name
+            )
+            await rag_service.connect()
+            logger.info("rag_service_initialized")
+        except Exception as rag_error:
+            logger.warning("rag_service_initialization_failed", error=str(rag_error))
+            logger.info("continuing_without_rag_service")
         
         llm_service = LLMService(api_key=settings.groq_api_key)
         
@@ -88,7 +96,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         logger.info("application_started")
         
     except Exception as e:
-        logger.error("application_startup_failed", error=str(e))
+        logger.error("application_startup_failed", error=str(e), exc_info=True)
         raise
     
     yield

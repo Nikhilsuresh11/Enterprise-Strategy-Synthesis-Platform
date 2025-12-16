@@ -189,6 +189,11 @@ class ResearchAgent:
             List of relevant documents with metadata
         """
         try:
+            # Skip if RAG service not available
+            if not self.rag:
+                logger.warning("rag_service_not_available_skipping")
+                return []
+            
             logger.info("gathering_rag_context", query=query[:50])
             
             # Search across all namespaces
@@ -343,6 +348,11 @@ class ResearchAgent:
             Regulatory information
         """
         try:
+            # Skip if RAG not available
+            if not self.rag:
+                logger.warning("rag_not_available_skipping_regulatory")
+                return {'regulations': [], 'requirements': [], 'restrictions': []}
+            
             logger.info("fetching_regulatory_info", industry=industry)
             
             # Query RAG for regulatory information
@@ -393,23 +403,28 @@ class ResearchAgent:
         try:
             logger.info("identifying_competitors", company=company)
             
-            # Get context from RAG
-            context_docs = await self.rag.semantic_search(
-                query=f"{industry} competitors market share",
-                namespace="case_studies",
-                top_k=5
-            )
-            
-            context_text = "\n\n".join([
-                f"{doc.get('metadata', {}).get('title', 'Document')}: {doc.get('text', '')[:500]}"
-                for doc in context_docs
-            ])
+            # Skip RAG if not available
+            context_text = ""
+            if self.rag:
+                # Get context from RAG
+                context_docs = await self.rag.semantic_search(
+                    query=f"{industry} competitors market share",
+                    namespace="case_studies",
+                    top_k=5
+                )
+                
+                context_text = "\n\n".join([
+                    f"{doc.get('metadata', {}).get('title', 'Document')}: {doc.get('text', '')[:500]}"
+                    for doc in context_docs
+                ])
+            else:
+                logger.warning("rag_not_available_using_llm_only")
             
             # Use LLM to extract competitors
             prompt = IDENTIFY_COMPETITORS_PROMPT.format(
                 company=company,
                 industry=industry,
-                context=context_text
+                context=context_text or "No additional context available"
             )
             
             response = await self.llm.generate_structured_output(
