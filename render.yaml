@@ -23,8 +23,8 @@ services:
       - key: NEWSAPI_KEY
         sync: false
       - key: LOG_LEVEL
-        value: INFO
+        sync: false
       - key: PYTHON_VERSION
-        value: 3.11.0
+        sync: false
       - key: KMP_DUPLICATE_LIB_OK
-        value: "TRUE"
+        sync: false
