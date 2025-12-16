@@ -4,9 +4,12 @@ services:
     env: python
     region: oregon
     plan: free
-    buildCommand: pip install -r requirements.txt
+    # Optimized build command (faster with --no-cache-dir and parallel downloads)
+    buildCommand: pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
+    # Auto-deploy on push
+    autoDeploy: true
     envVars:
       - key: GROQ_API_KEY
         sync: false
@@ -22,3 +25,5 @@ services:
         sync: false
       - key: LOG_LEVEL
         value: INFO
+      - key: PYTHON_VERSION
+        value: 3.11.0
