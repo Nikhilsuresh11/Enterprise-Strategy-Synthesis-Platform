@@ -1,4 +1,4 @@
-# Stratagem AI - Autonomous Management Consulting System
+# Enterprise Strategy Synthesis Platform - Autonomous Management Consulting System
 
 **Production-grade multi-agent AI system that generates McKinsey-quality consulting decks in <90 seconds.**
 
