@@ -17,9 +17,9 @@ services:
       - key: PINECONE_API_KEY
         sync: false
       - key: PINECONE_ENVIRONMENT
-        value: us-east-1
+        sync: false
       - key: PINECONE_INDEX_NAME
-        value: stratagem-rag
+        sync: false
       - key: NEWSAPI_KEY
         sync: false
       - key: LOG_LEVEL
