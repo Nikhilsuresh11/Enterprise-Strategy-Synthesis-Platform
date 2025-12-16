@@ -1,14 +1,13 @@
 services:
   - type: web
     name: stratagem-ai
-    env: python
+    runtime: python
     region: oregon
     plan: free
-    # Optimized build command (faster with --no-cache-dir and parallel downloads)
-    buildCommand: pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt
+    branch: main
+    buildCommand: pip install --no-cache-dir -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
-    # Auto-deploy on push
     autoDeploy: true
     envVars:
       - key: GROQ_API_KEY
@@ -27,3 +26,5 @@ services:
         value: INFO
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: KMP_DUPLICATE_LIB_OK
+        value: "TRUE"
