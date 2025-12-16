@@ -1,0 +1,50 @@
+# Core Web Framework
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-multipart
+
+# LangChain & AI
+langchain
+langchain-community
+langchain-groq
+langgraph
+groq
+
+# Database
+pymongo
+motor
+
+# Vector Database
+pinecone
+sentence-transformers
+
+# Document Processing
+pypdf
+PyPDF2
+python-pptx
+reportlab
+
+# Data & Analytics
+pandas
+numpy
+plotly
+kaleido
+
+# HTTP & API
+httpx
+aiohttp
+requests
+
+# External Data Sources
+yfinance
+newsapi-python
+Wikipedia-API
+beautifulsoup4
+lxml
+
+# Utilities
+python-dotenv
+tenacity
+structlog

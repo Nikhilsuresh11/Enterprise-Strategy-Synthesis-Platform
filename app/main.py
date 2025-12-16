@@ -1,0 +1,191 @@
+"""Stratagem AI - FastAPI Application Entry Point."""
+
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from app.config import get_settings
+from app.routers.analysis import router as analysis_router, set_services
+from app.services.db_service import DatabaseService
+from app.services.rag_service import RAGService
+from app.services.llm_service import LLMService
+from app.services.external_apis import ExternalDataService
+from app.services.deck_service import DeckGenerationService
+from app.agents.researcher import ResearchAgent
+from app.agents.analyst import AnalystAgent
+from app.agents.regulatory import RegulatoryAgent
+from app.agents.synthesizer import SynthesizerAgent
+from app.workflows.orchestrator import StratagemOrchestrator
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
+settings = get_settings()
+
+# Global services
+db_service: DatabaseService = None
+orchestrator: StratagemOrchestrator = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator:
+    """
+    Application lifespan manager.
+    
+    Handles startup and shutdown events.
+    """
+    # Startup
+    global db_service, orchestrator
+    
+    logger.info("application_starting", version="1.0.0")
+    
+    try:
+        # Initialize core services
+        logger.info("initializing_services")
+        
+        db_service = DatabaseService(
+            mongodb_uri=settings.mongodb_uri,
+            db_name=settings.mongodb_db_name
+        )
+        await db_service.connect()
+        
+        rag_service = RAGService(
+            api_key=settings.pinecone_api_key,
+            environment=settings.pinecone_environment,
+            index_name=settings.pinecone_index_name
+        )
+        await rag_service.connect()
+        
+        llm_service = LLMService(api_key=settings.groq_api_key)
+        
+        external_service = ExternalDataService(newsapi_key=settings.newsapi_key)
+        
+        deck_service = DeckGenerationService(output_dir="outputs")
+        
+        # Initialize agents
+        logger.info("initializing_agents")
+        
+        research_agent = ResearchAgent(rag_service, llm_service, db_service, external_service)
+        analyst_agent = AnalystAgent(llm_service, db_service)
+        regulatory_agent = RegulatoryAgent(llm_service, rag_service, db_service)
+        synthesizer_agent = SynthesizerAgent(llm_service, db_service)
+        
+        # Initialize orchestrator
+        logger.info("initializing_orchestrator")
+        
+        orchestrator = StratagemOrchestrator(
+            research_agent,
+            analyst_agent,
+            regulatory_agent,
+            synthesizer_agent
+        )
+        
+        # Set services in router
+        set_services(db_service, orchestrator, deck_service)
+        
+        logger.info("application_started")
+        
+    except Exception as e:
+        logger.error("application_startup_failed", error=str(e))
+        raise
+    
+    yield
+    
+    # Shutdown
+    logger.info("application_shutting_down")
+    
+    if db_service:
+        await db_service.disconnect()
+    
+    logger.info("application_shutdown_complete")
+
+
+
+# Create FastAPI application
+app = FastAPI(
+    title="Stratagem AI",
+    description="Enterprise Multi-Agent Management Consulting System",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    lifespan=lifespan
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(analysis_router)
+
+
+@app.get(
+    "/health",
+    tags=["health"],
+    summary="Health check endpoint",
+    description="Check if the API is running and database is connected"
+)
+async def health_check() -> JSONResponse:
+    """
+    Health check endpoint.
+    
+    Returns:
+        JSON response with health status
+    """
+    health_status = {
+        "status": "healthy",
+        "version": "1.0.0",
+        "service": "stratagem-ai"
+    }
+    
+    # Check database connection
+    if db_service and db_service._initialized:
+        health_status["database"] = "connected"
+    else:
+        health_status["database"] = "disconnected"
+        health_status["status"] = "degraded"
+    
+    logger.debug("health_check", status=health_status["status"])
+    
+    return JSONResponse(content=health_status)
+
+
+@app.get(
+    "/",
+    tags=["root"],
+    summary="Root endpoint",
+    description="API root with basic information"
+)
+async def root() -> dict:
+    """
+    Root endpoint.
+    
+    Returns:
+        Basic API information
+    """
+    return {
+        "name": "Stratagem AI",
+        "version": "1.0.0",
+        "description": "Enterprise Multi-Agent Management Consulting System",
+        "docs": "/docs",
+        "health": "/health"
+    }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    uvicorn.run(
+        "app.main:app",
+        host=settings.api_host,
+        port=settings.api_port,
+        reload=True,
+        log_level=settings.log_level.lower()
+    )

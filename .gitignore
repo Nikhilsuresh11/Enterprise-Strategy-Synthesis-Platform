@@ -1,0 +1,89 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+consultantenv/
+myenv/
+env/
+ENV/
+
+# Environment Variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+
+# Outputs (generated files)
+outputs/*
+!outputs/.gitignore
+
+# Data (downloaded knowledge base)
+data/knowledge_base/
+data/case_studies/
+data/rag_corpus/
+data/*.json
+data/*.csv
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Local test/guide files (optional - keep for reference)
+# Uncomment to exclude from Git:
+# API_TESTING.md
+# QUICK_TEST.md
+# KNOWLEDGE_BASE_*.md
+# INGESTION_FIXED.md
