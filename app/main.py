@@ -1,11 +1,14 @@
 """Stratagem AI - FastAPI Application Entry Point."""
 
+import psutil
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.routers.analysis import router as analysis_router, set_services
@@ -24,6 +27,14 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 settings = get_settings()
 
+# Memory logging helper
+def log_memory(stage: str):
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    mem_mb = mem_info.rss / 1024 / 1024
+    logger.info(f"💾 MEMORY [{stage}]: {mem_mb:.2f} MB")
+    print(f"💾 MEMORY [{stage}]: {mem_mb:.2f} MB")
+
 # Global services
 db_service: DatabaseService = None
 orchestrator: StratagemOrchestrator = None
@@ -39,6 +50,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     # Startup
     global db_service, orchestrator
     
+    log_memory("APP_START")
     logger.info("application_starting", version="1.0.0")
     
     try:
@@ -50,21 +62,26 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             db_name=settings.mongodb_db_name
         )
         await db_service.connect()
+        log_memory("AFTER_DB")
         
         # Initialize RAG service (lazy - may fail if PyTorch not available)
         rag_service = None
-        try:
-            logger.info("initializing_rag_service")
-            rag_service = RAGService(
-                api_key=settings.pinecone_api_key,
-                environment=settings.pinecone_environment,
-                index_name=settings.pinecone_index_name
-            )
-            await rag_service.connect()
-            logger.info("rag_service_initialized")
-        except Exception as rag_error:
-            logger.warning("rag_service_initialization_failed", error=str(rag_error))
-            logger.info("continuing_without_rag_service")
+        if settings.enable_rag:
+            try:
+                logger.info("initializing_rag_service")
+                rag_service = RAGService(
+                    api_key=settings.pinecone_api_key,
+                    environment=settings.pinecone_environment,
+                    index_name=settings.pinecone_index_name
+                )
+                await rag_service.connect()
+                log_memory("AFTER_RAG")
+                logger.info("rag_service_initialized")
+            except Exception as rag_error:
+                logger.warning("rag_service_initialization_failed", error=str(rag_error))
+                logger.info("continuing_without_rag_service")
+        else:
+            logger.info("rag_service_disabled_by_config")
         
         llm_service = LLMService(api_key=settings.groq_api_key)
         
@@ -91,8 +108,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         )
         
         # Set services in router
-        set_services(db_service, orchestrator, deck_service)
+        set_services(db_service, orchestrator, deck_service, llm_service)
         
+        log_memory("AFTER_ALL_AGENTS")
         logger.info("application_started")
         
     except Exception as e:
@@ -133,6 +151,13 @@ app.add_middleware(
 # Include routers
 app.include_router(analysis_router)
 
+# Mount static files
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if not os.path.exists(static_dir):
+    os.makedirs(static_dir)
+
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
 
 @app.get(
     "/health",
@@ -169,19 +194,19 @@ async def health_check() -> JSONResponse:
     "/",
     tags=["root"],
     summary="Root endpoint",
-    description="API root with basic information"
+    description="Serve the frontend SPA"
 )
-async def root() -> dict:
+async def root():
     """
-    Root endpoint.
-    
-    Returns:
-        Basic API information
+    Serve the frontend application.
     """
+    index_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
     return {
         "name": "Stratagem AI",
         "version": "1.0.0",
-        "description": "Enterprise Multi-Agent Management Consulting System",
+        "description": "Enterprise Multi-Agent Management Consulting System (Static frontend missing)",
         "docs": "/docs",
         "health": "/health"
     }

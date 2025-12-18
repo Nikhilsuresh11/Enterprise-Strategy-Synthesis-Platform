@@ -35,12 +35,12 @@ class Settings(BaseSettings):
     
     # Embedding Configuration
     embedding_model: str = Field(
-        default="sentence-transformers/all-MiniLM-L6-v2",
-        description="Embedding model to use (Sentence Transformers)"
+        default="sentence-transformers/all-mpnet-base-v2",
+        description="Embedding model (upgraded for better quality)"
     )
     embedding_dimension: int = Field(
-        default=384,
-        description="Embedding dimension (384 for all-MiniLM-L6-v2)"
+        default=768,
+        description="Embedding dimension (768 for all-mpnet-base-v2)"
     )
     
     # RAG Configuration
@@ -67,8 +67,8 @@ class Settings(BaseSettings):
         description="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)"
     )
     max_concurrent_agents: int = Field(
-        default=4,
-        description="Maximum number of concurrent agent executions"
+        default=8,
+        description="Maximum number of concurrent agent executions (increased for speed)"
     )
     
     # API Configuration - Render Compatible
@@ -83,6 +83,12 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(
         default=["*"],
         description="Allowed CORS origins"
+    )
+
+    # Feature Flags
+    enable_rag: bool = Field(
+        default=False,
+        description="Enable RAG service (requires Pinecone & Sentence Transformers)"
     )
     
     model_config = SettingsConfigDict(

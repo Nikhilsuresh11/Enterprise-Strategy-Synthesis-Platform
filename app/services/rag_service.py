@@ -4,7 +4,9 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime
 
 from pinecone import Pinecone
-from sentence_transformers import SentenceTransformer
+
+# Lazy import for sentence-transformers to avoid heavy dependency on startup/import
+SentenceTransformer = None
 
 from app.utils.logger import get_logger
 
@@ -41,6 +43,16 @@ class RAGService:
         
         # Initialize Sentence Transformers model (runs locally, FREE)
         logger.info("loading_embedding_model", model=embedding_model)
+        
+        global SentenceTransformer
+        if SentenceTransformer is None:
+            try:
+                from sentence_transformers import SentenceTransformer as ST
+                SentenceTransformer = ST
+            except ImportError:
+                logger.error("sentence_transformers_not_installed")
+                raise ImportError("Please install sentence-transformers to use RAG service.")
+                
         self.embedding_model = SentenceTransformer(embedding_model)
         
         self.pc = None

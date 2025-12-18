@@ -21,14 +21,47 @@ router = APIRouter(prefix="/api/v1", tags=["analysis"])
 db_service: Optional[DatabaseService] = None
 orchestrator = None
 deck_service = None
+llm_service = None
 
 
-def set_services(db: DatabaseService, orch, deck) -> None:
+def set_services(db: DatabaseService, orch, deck, llm) -> None:
     """Set service instances."""
-    global db_service, orchestrator, deck_service
+    global db_service, orchestrator, deck_service, llm_service
     db_service = db
     orchestrator = orch
     deck_service = deck
+    llm_service = llm
+
+
+@router.post(
+    "/clarify",
+    summary="Get clarification question",
+    description="Get a single clarifying question from LLM before starting analysis"
+)
+async def get_clarification(request: AnalysisRequest):
+    """Get a clarifying question from LLM."""
+    try:
+        prompt = f"""
+        You are a management consulting assistant. User wants an analysis for:
+        Company: {request.company_name}
+        Industry: {request.industry}
+        Strategic Question: {request.strategic_question}
+        
+        Based on this, ask exactly ONE clarifying question that would help make the analysis more targeted and valuable.
+        Keep it brief and professional.
+        """
+        response = await llm_service.generate(
+            prompt=prompt
+        )
+        
+        # If llm_service.generate_json returns a string or dict, adjust accordingly
+        # Assuming it returns a string if response_model is None
+        question = response if isinstance(response, str) else str(response)
+        
+        return {"question": question.strip()}
+    except Exception as e:
+        logger.error("clarification_failed", error=str(e))
+        return {"question": "Could you provide more specific details about your primary goal for this analysis?"}
 
 
 async def run_analysis_background(job_id: str, request_data: Dict):

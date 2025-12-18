@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stratagem AI | Enterprise Strategy Synthesis</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i data-lucide="zap" class="logo-icon"></i>
+                <span class="logo-text">Stratagem AI</span>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" id="new-chat">
+                    <i data-lucide="plus-circle"></i>
+                    <span>New Analysis</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">NS</div>
+                    <div class="user-info">
+                        <span class="user-name">Enterprise User</span>
+                        <span class="user-role">Strategy Lead</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <span class="model-badge">Pro 1.0</span>
+                </div>
+                <div class="header-right">
+                    <button class="icon-btn"><i data-lucide="settings"></i></button>
+                    <button class="icon-btn"><i data-lucide="share-2"></i></button>
+                </div>
+            </header>
+
+            <div class="chat-viewport" id="chat-viewport">
+                <!-- Welcome Screen -->
+                <div class="welcome-screen" id="welcome-screen">
+                    <h1>What strategy shall we synthesize today?</h1>
+                    <div class="suggestions">
+                        <div class="suggestion-card" onclick="prefill('Tesla', 'Automotive', 'Should Tesla expand into India?')">
+                            <i data-lucide="globe"></i>
+                            <p>Market expansion analysis for Tesla in India</p>
+                        </div>
+                        <div class="suggestion-card" onclick="prefill('Apple', 'Tech', 'Impact of Vision Pro on future revenue?')">
+                            <i data-lucide="trending-up"></i>
+                            <p>Revenue impact of Apple Vision Pro</p>
+                        </div>
+                        <div class="suggestion-card" onclick="prefill('Reliance', 'Energy', 'H2 energy transition strategy?')">
+                            <i data-lucide="zap"></i>
+                            <p>Reliance Green Hydrogen strategy</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Messages Area -->
+                <div class="messages-container" id="messages-container"></div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="footer-input">
+                <div class="input-wrapper">
+                    <form id="analysis-form">
+                        <div class="input-fields" id="initial-inputs">
+                            <input type="text" id="company_name" placeholder="Company Name (e.g. NVIDIA)" required>
+                            <input type="text" id="industry" placeholder="Industry (e.g. Semiconductors)" required>
+                            <textarea id="strategic_question" placeholder="Ask your strategic question..." required rows="1"></textarea>
+                        </div>
+                        <div class="input-fields hidden" id="clarification-inputs">
+                            <textarea id="clarification_answer" placeholder="Your answer to the clarification..." rows="1"></textarea>
+                        </div>
+                        <div class="input-actions">
+                            <button type="submit" id="submit-btn" class="send-btn">
+                                <i data-lucide="arrow-up"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <p class="disclaimer">Stratagem AI can provide detailed insights but always verify critical strategic data.</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loading-overlay">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <h2 id="loading-status">Initializing Analysis...</h2>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <p id="loading-detail">Our agents are researching news, financial data, and regulatory maps.</p>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+    <script>
+        // Prefill suggestions
+        function prefill(co, ind, q) {
+            document.getElementById('company_name').value = co;
+            document.getElementById('industry').value = ind;
+            document.getElementById('strategic_question').value = q;
+            document.getElementById('strategic_question').focus();
+        }
+        
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
