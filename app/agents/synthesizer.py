@@ -138,12 +138,24 @@ class SynthesizerAgent:
                 recommendation=exec_summary.get("recommendation", "unknown")
             )
             
+            # Update progress: Synthesizer complete (90%)
+            if "db_service" in state["metadata"] and "job_id" in state["metadata"]:
+                try:
+                    await state["metadata"]["db_service"].update_session_status(
+                        state["metadata"]["job_id"], "processing", 90
+                    )
+                except Exception as e:
+                    logger.warning("progress_update_failed", error=str(e))
+            
             return state
             
         except Exception as e:
             error_msg = f"Synthesizer agent failed: {str(e)}"
+            # Defensive: ensure errors list exists
+            if "errors" not in state:
+                state["errors"] = []
             state["errors"].append(error_msg)
-            logger.error("synthesizer_agent_failed", error=str(e))
+            logger.error("synthesizer_agent_failed", error=str(e), exc_info=True)
             return state
     
     async def generate_executive_summary(

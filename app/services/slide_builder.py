@@ -81,9 +81,9 @@ class SlideBuilder:
             f"**Serviceable Addressable Market (SAM):** ${sam:,.0f}M",
             f"**Serviceable Obtainable Market (SOM, Year 5):** ${som:,.0f}M",
             "",
-            f"• Target represents {(som/tam*100):.1f}% of total market",
+            f"• Target represents {(som/tam*100):.1f}% of total market" if tam > 0 else "• Target market size calculated",
             f"• Realistic penetration based on competitive analysis",
-            f"• SAM represents {(sam/tam*100):.0f}% of TAM based on geographic/segment focus"
+            f"• SAM represents {(sam/tam*100):.0f}% of TAM based on geographic/segment focus" if tam > 0 else "• SAM calculated based on geographic/segment focus"
         ]
         
         return {
@@ -231,7 +231,7 @@ class SlideBuilder:
             "title": "Market Overview",
             "content": [
                 f"**Industry:** {request.get('industry', 'Unknown')}",
-                f"**Analysis Type:** {request.get('analysis_type', 'expansion').title()}",
+                f"**Analysis Type:** {(request.get('analysis_type') or 'expansion').title()}",
                 "",
                 "**Market Context:**",
                 f"• Market attractiveness validated through comprehensive analysis",

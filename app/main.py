@@ -159,8 +159,9 @@ if not os.path.exists(static_dir):
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
-@app.get(
+@app.api_route(
     "/health",
+    methods=["GET", "HEAD"],
     tags=["health"],
     summary="Health check endpoint",
     description="Check if the API is running and database is connected"
@@ -190,8 +191,9 @@ async def health_check() -> JSONResponse:
     return JSONResponse(content=health_status)
 
 
-@app.get(
+@app.api_route(
     "/",
+    methods=["GET", "HEAD"],
     tags=["root"],
     summary="Root endpoint",
     description="Serve the frontend SPA"
@@ -218,7 +220,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",
         host=settings.api_host,
-        port=settings.api_port,
+        port=settings.port,
         reload=True,
         log_level=settings.log_level.lower()
     )

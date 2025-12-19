@@ -47,8 +47,8 @@ async def get_clarification(request: AnalysisRequest):
         Industry: {request.industry}
         Strategic Question: {request.strategic_question}
         
-        Based on this, ask exactly ONE clarifying question that would help make the analysis more targeted and valuable.
-        Keep it brief and professional.
+        Based on this, ask exactly ONE clarifying question if needed that would help make the analysis more targeted and valuable.
+        Keep it professional.
         """
         response = await llm_service.generate(
             prompt=prompt
@@ -89,11 +89,29 @@ async def run_analysis_background(job_id: str, request_data: Dict):
             }
         }
         
-        # Execute orchestrator
+        # Execute orchestrator with progress tracking
         logger.info("executing_orchestrator", job_id=job_id)
+        
+        # We'll manually track progress since LangGraph doesn't expose per-node callbacks easily
+        # Progress: 10% (started) → 25% (research) → 50% (analyst) → 75% (regulatory) → 90% (synthesizer) → 100% (files ready)
+        
+        # Store job_id in state metadata for progress updates
+        initial_state["metadata"]["job_id"] = job_id
+        initial_state["metadata"]["db_service"] = db_service
+        
         final_state = await orchestrator.execute(initial_state)
         
-        # Generate outputs (PDF, PPT, JSON)
+        # Check if orchestrator had errors
+        if final_state.get("errors"):
+            error_msg = "; ".join(final_state["errors"])
+            logger.error("orchestrator_had_errors", job_id=job_id, errors=error_msg)
+            await db_service.update_session_status(
+                job_id, "failed", 0, 
+                error_message=f"Analysis failed: {error_msg}"
+            )
+            return
+        
+        # Generate outputs (PDF, PPT, JSON) ONLY if orchestrator succeeded
         logger.info("generating_outputs", job_id=job_id)
         output_paths = await deck_service.generate_all_outputs(
             job_id=job_id,
@@ -102,6 +120,34 @@ async def run_analysis_background(job_id: str, request_data: Dict):
             company_name=request_data.get("company_name", "Company")
         )
         
+        # Verify files exist before marking as completed
+        import os
+        files_ready = all(
+            os.path.exists(path) for path in output_paths.values() if path
+        )
+        
+        if not files_ready:
+            logger.warning("output_files_not_ready", job_id=job_id, paths=output_paths)
+            # Wait a bit for file system to sync
+            import asyncio
+            await asyncio.sleep(1)
+            # Check again
+            files_ready = all(
+                os.path.exists(path) for path in output_paths.values() if path
+            )
+        
+        if not files_ready:
+            logger.error("output_files_missing", job_id=job_id, paths=output_paths)
+            await db_service.update_session_status(
+                job_id, "failed", 0,
+                error_message="Failed to generate output files"
+            )
+            return
+        
+        # Clean up non-serializable objects from state metadata before saving
+        if "db_service" in final_state.get("metadata", {}):
+            del final_state["metadata"]["db_service"]
+        
         # Update session with results
         await db_service.update_session_with_results(
             job_id=job_id,
@@ -109,10 +155,10 @@ async def run_analysis_background(job_id: str, request_data: Dict):
             output_paths=output_paths
         )
         
-        # Mark as completed
+        # Mark as completed ONLY after files are verified
         await db_service.update_session_status(job_id, "completed", 100)
         
-        logger.info("background_analysis_complete", job_id=job_id)
+        logger.info("background_analysis_complete", job_id=job_id, output_paths=output_paths)
         
     except Exception as e:
         logger.error("background_analysis_failed", job_id=job_id, error=str(e))

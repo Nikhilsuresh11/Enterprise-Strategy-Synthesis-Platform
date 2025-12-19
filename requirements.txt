@@ -18,9 +18,9 @@ groq
 pymongo
 motor
 
-# Vector Database with ML
-pinecone
-sentence-transformers
+# Vector Database with ML (Excluded for optimized Render deployment)
+# pinecone
+# sentence-transformers
 
 # Document Processing
 pypdf

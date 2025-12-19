@@ -1,0 +1,4 @@
+# Heavy ML dependencies for RAG (Optional)
+pinecone
+sentence-transformers
+torch  # Often pulled in by sentence-transformers

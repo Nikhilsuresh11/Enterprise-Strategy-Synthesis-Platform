@@ -56,7 +56,8 @@ class StratagemOrchestrator:
         Returns:
             Compiled workflow graph
         """
-        workflow = StateGraph(dict)
+        # Use AgentState type for proper state management
+        workflow = StateGraph(AgentState)
         
         # Add nodes for each agent
         workflow.add_node("research", self.research.execute)
@@ -118,7 +119,10 @@ class StratagemOrchestrator:
             return final_state
             
         except Exception as e:
-            logger.error("orchestrator_failed", error=str(e))
+            logger.error("orchestrator_failed", error=str(e), exc_info=True)
+            # Ensure errors list exists
+            if "errors" not in initial_state:
+                initial_state["errors"] = []
             initial_state["errors"].append(f"Orchestrator failed: {str(e)}")
             return initial_state
 

@@ -74,6 +74,17 @@ class ResearchAgent:
             Updated state with research_data populated
         """
         try:
+            # Defensive: ensure required keys exist
+            if "request" not in state:
+                logger.error("research_agent_missing_request", state_keys=list(state.keys()))
+                if "errors" not in state:
+                    state["errors"] = []
+                state["errors"].append("Research agent: missing request in state")
+                return state
+            
+            if "errors" not in state:
+                state["errors"] = []
+            
             request = state["request"]
             company = request["company_name"]
             industry = request["industry"]
@@ -135,6 +146,10 @@ class ResearchAgent:
             # Step 4: Update state
             state["research_data"] = consolidated
             state["rag_context"] = rag_context
+            
+            # Ensure metadata exists
+            if "metadata" not in state:
+                state["metadata"] = {}
             state["metadata"]["research_time"] = time.time() - start_time
             
             # Step 5: Cache results (24 hours)
@@ -158,12 +173,24 @@ class ResearchAgent:
                 data_points=len(rag_context) + len(news)
             )
             
+            # Update progress: Research complete (25%)
+            if "db_service" in state["metadata"] and "job_id" in state["metadata"]:
+                try:
+                    await state["metadata"]["db_service"].update_session_status(
+                        state["metadata"]["job_id"], "processing", 25
+                    )
+                except Exception as e:
+                    logger.warning("progress_update_failed", error=str(e))
+            
             return state
             
         except Exception as e:
             error_msg = f"Research agent failed: {str(e)}"
+            # Defensive: ensure errors list exists
+            if "errors" not in state:
+                state["errors"] = []
             state["errors"].append(error_msg)
-            logger.error("research_agent_failed", error=str(e))
+            logger.error("research_agent_failed", error=str(e), exc_info=True)
             return state
     
     async def gather_rag_context(

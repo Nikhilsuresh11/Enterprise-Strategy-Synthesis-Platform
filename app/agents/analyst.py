@@ -201,12 +201,24 @@ class AnalystAgent:
                 charts=len(charts)
             )
             
+            # Update progress: Analyst complete (50%)
+            if "db_service" in state["metadata"] and "job_id" in state["metadata"]:
+                try:
+                    await state["metadata"]["db_service"].update_session_status(
+                        state["metadata"]["job_id"], "processing", 50
+                    )
+                except Exception as e:
+                    logger.warning("progress_update_failed", error=str(e))
+            
             return state
             
         except Exception as e:
             error_msg = f"Analyst agent failed: {str(e)}"
+            # Defensive: ensure errors list exists
+            if "errors" not in state:
+                state["errors"] = []
             state["errors"].append(error_msg)
-            logger.error("analyst_agent_failed", error=str(e))
+            logger.error("analyst_agent_failed", error=str(e), exc_info=True)
             return state
     
     async def calculate_tam_sam_som(
