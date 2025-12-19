@@ -3,9 +3,8 @@
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 
-from pinecone import Pinecone
-
-# Lazy import for sentence-transformers to avoid heavy dependency on startup/import
+# Lazy imports to avoid dependency errors when RAG is disabled
+Pinecone = None
 SentenceTransformer = None
 
 from app.utils.logger import get_logger
@@ -41,10 +40,19 @@ class RAGService:
         self.index_name = index_name
         self.embedding_model_name = embedding_model
         
+        # Lazy import Pinecone (only when RAG is actually used)
+        global Pinecone, SentenceTransformer
+        if Pinecone is None:
+            try:
+                from pinecone import Pinecone as PC
+                Pinecone = PC
+            except ImportError:
+                logger.error("pinecone_not_installed")
+                raise ImportError("Please install pinecone-client to use RAG service.")
+        
         # Initialize Sentence Transformers model (runs locally, FREE)
         logger.info("loading_embedding_model", model=embedding_model)
         
-        global SentenceTransformer
         if SentenceTransformer is None:
             try:
                 from sentence_transformers import SentenceTransformer as ST

@@ -90,6 +90,12 @@ class DatabaseService:
             IndexModel([("job_id", ASCENDING)]),
         ])
         
+        # Users indexes
+        await self.db.users.create_indexes([
+            IndexModel([("email", ASCENDING)], unique=True),
+            IndexModel([("created_at", DESCENDING)]),
+        ])
+        
         logger.info("database_indexes_created")
     
     async def save_analysis_session(self, session_data: Dict[str, Any]) -> str:
@@ -409,4 +415,89 @@ class DatabaseService:
             return deleted_count
         except PyMongoError as e:
             logger.error("cleanup_cache_failed", error=str(e))
+            raise
+    
+    # User Management Methods
+    
+    async def create_user(
+        self,
+        email: str,
+        password_hash: str
+    ) -> str:
+        """
+        Create a new user.
+        
+        Args:
+            email: User email address
+            password_hash: Hashed password
+            
+        Returns:
+            User email
+            
+        Raises:
+            DuplicateKeyError: If email already exists
+            PyMongoError: If database operation fails
+        """
+        if self.db is None:
+            raise RuntimeError("Database not connected")
+        
+        document = {
+            "email": email,
+            "password_hash": password_hash,
+            "created_at": datetime.utcnow(),
+            "last_login": None,
+        }
+        
+        try:
+            await self.db.users.insert_one(document)
+            logger.info("user_created", email=email)
+            return email
+        except DuplicateKeyError:
+            logger.error("duplicate_email", email=email)
+            raise
+        except PyMongoError as e:
+            logger.error("create_user_failed", error=str(e))
+            raise
+    
+    async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve a user by email.
+        
+        Args:
+            email: User email address
+            
+        Returns:
+            User data or None if not found
+        """
+        if self.db is None:
+            raise RuntimeError("Database not connected")
+        
+        try:
+            user = await self.db.users.find_one({"email": email})
+            if user:
+                # Remove MongoDB _id field
+                user.pop("_id", None)
+            return user
+        except PyMongoError as e:
+            logger.error("get_user_failed", email=email, error=str(e))
+            raise
+    
+    async def update_last_login(self, email: str) -> None:
+        """
+        Update user's last login timestamp.
+        
+        Args:
+            email: User email address
+        """
+        if self.db is None:
+            raise RuntimeError("Database not connected")
+        
+        try:
+            await self.db.users.update_one(
+                {"email": email},
+                {"$set": {"last_login": datetime.utcnow()}}
+            )
+            logger.debug("last_login_updated", email=email)
+        except PyMongoError as e:
+            logger.error("update_last_login_failed", email=email, error=str(e))
             raise

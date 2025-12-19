@@ -11,7 +11,10 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
-from app.routers.analysis import router as analysis_router, set_services
+from app.routers import analysis
+from app.routers import auth
+from app.routers.analysis import router as analysis_router
+from app.routers.auth import router as auth_router
 from app.services.db_service import DatabaseService
 from app.services.rag_service import RAGService
 from app.services.llm_service import LLMService
@@ -38,6 +41,10 @@ def log_memory(stage: str):
 # Global services
 db_service: DatabaseService = None
 orchestrator: StratagemOrchestrator = None
+rag_service: RAGService = None # Added to make it accessible for set_services
+llm_service: LLMService = None # Added to make it accessible for set_services
+external_service: ExternalDataService = None # Added to make it accessible for set_services
+deck_service: DeckGenerationService = None # Added to make it accessible for set_services
 
 
 @asynccontextmanager
@@ -48,7 +55,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     Handles startup and shutdown events.
     """
     # Startup
-    global db_service, orchestrator
+    global db_service, orchestrator, rag_service, llm_service, external_service, deck_service
     
     log_memory("APP_START")
     logger.info("application_starting", version="1.0.0")
@@ -107,8 +114,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             synthesizer_agent
         )
         
-        # Set services in router
-        set_services(db_service, orchestrator, deck_service, llm_service)
+        # Set services for routers (db, orchestrator, deck_service, llm_service)
+        analysis.set_services(db_service, orchestrator, deck_service, llm_service)
+        auth.set_services(db_service)
         
         log_memory("AFTER_ALL_AGENTS")
         logger.info("application_started")
@@ -150,6 +158,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(analysis_router)
+app.include_router(auth_router)
 
 # Mount static files
 static_dir = os.path.join(os.path.dirname(__file__), "static")
@@ -191,17 +200,9 @@ async def health_check() -> JSONResponse:
     return JSONResponse(content=health_status)
 
 
-@app.api_route(
-    "/",
-    methods=["GET", "HEAD"],
-    tags=["root"],
-    summary="Root endpoint",
-    description="Serve the frontend SPA"
-)
+@app.api_route("/", methods=["GET", "HEAD"])
 async def root():
-    """
-    Serve the frontend application.
-    """
+    """Serve main application page."""
     index_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
@@ -212,6 +213,15 @@ async def root():
         "docs": "/docs",
         "health": "/health"
     }
+
+
+@app.get("/login")
+async def login_page():
+    """Serve login page."""
+    login_path = os.path.join(os.path.dirname(__file__), "static", "login.html")
+    if os.path.exists(login_path):
+        return FileResponse(login_path)
+    return {"error": "Login page not found"}
 
 
 if __name__ == "__main__":

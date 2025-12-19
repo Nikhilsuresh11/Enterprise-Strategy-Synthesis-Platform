@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar -->
@@ -39,7 +41,10 @@
         <main class="main-content">
             <header class="top-header">
                 <div class="header-left">
-                    <span class="model-badge">Pro 1.0</span>
+                    <button class="icon-btn" id="sidebar-toggle">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <span class="model-badge">Junior Consultant here!</span>
                 </div>
                 <div class="header-right">
                     <button class="icon-btn"><i data-lucide="settings"></i></button>
@@ -50,17 +55,20 @@
             <div class="chat-viewport" id="chat-viewport">
                 <!-- Welcome Screen -->
                 <div class="welcome-screen" id="welcome-screen">
-                    <h1>What strategy shall we synthesize today?</h1>
+                    <h1>What strategy shall we Pitch today?</h1>
                     <div class="suggestions">
-                        <div class="suggestion-card" onclick="prefill('Tesla', 'Automotive', 'Should Tesla expand into India?')">
+                        <div class="suggestion-card"
+                            onclick="prefill('Tesla', 'Automotive', 'Should Tesla expand into India?')">
                             <i data-lucide="globe"></i>
                             <p>Market expansion analysis for Tesla in India</p>
                         </div>
-                        <div class="suggestion-card" onclick="prefill('Apple', 'Tech', 'Impact of Vision Pro on future revenue?')">
+                        <div class="suggestion-card"
+                            onclick="prefill('Apple', 'Tech', 'Impact of Vision Pro on future revenue?')">
                             <i data-lucide="trending-up"></i>
                             <p>Revenue impact of Apple Vision Pro</p>
                         </div>
-                        <div class="suggestion-card" onclick="prefill('Reliance', 'Energy', 'H2 energy transition strategy?')">
+                        <div class="suggestion-card"
+                            onclick="prefill('Reliance', 'Energy', 'H2 energy transition strategy?')">
                             <i data-lucide="zap"></i>
                             <p>Reliance Green Hydrogen strategy</p>
                         </div>
@@ -78,10 +86,12 @@
                         <div class="input-fields" id="initial-inputs">
                             <input type="text" id="company_name" placeholder="Company Name (e.g. NVIDIA)" required>
                             <input type="text" id="industry" placeholder="Industry (e.g. Semiconductors)" required>
-                            <textarea id="strategic_question" placeholder="Ask your strategic question..." required rows="1"></textarea>
+                            <textarea id="strategic_question" placeholder="Ask your strategic question..." required
+                                rows="1"></textarea>
                         </div>
                         <div class="input-fields hidden" id="clarification-inputs">
-                            <textarea id="clarification_answer" placeholder="Your answer to the clarification..." rows="1"></textarea>
+                            <textarea id="clarification_answer" placeholder="Your answer to the clarification..."
+                                rows="1"></textarea>
                         </div>
                         <div class="input-actions">
                             <button type="submit" id="submit-btn" class="send-btn">
@@ -90,7 +100,8 @@
                         </div>
                     </form>
                 </div>
-                <p class="disclaimer">Stratagem AI can provide detailed insights but always verify critical strategic data.</p>
+                <p class="disclaimer">This is a Prototype. Stratagem AI can provide detailed insights but in free tier there is memory limit couldn't deploy advanced feature.
+                    </p>
             </div>
         </main>
     </div>
@@ -109,16 +120,11 @@
 
     <script src="/static/script.js"></script>
     <script>
-        // Prefill suggestions
-        function prefill(co, ind, q) {
-            document.getElementById('company_name').value = co;
-            document.getElementById('industry').value = ind;
-            document.getElementById('strategic_question').value = q;
-            document.getElementById('strategic_question').focus();
-        }
-        
-        // Initialize Lucide icons
-        lucide.createIcons();
+        // Initialize Lucide icons after page load
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
     </script>
 </body>
+
 </html>

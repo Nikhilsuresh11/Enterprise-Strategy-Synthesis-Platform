@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Stratagem AI</title>
+    <link rel="stylesheet" href="/static/login.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+</head>
+
+<body>
+    <div class="auth-container">
+        <!-- Animated background -->
+        <div class="bg-gradient"></div>
+
+        <!-- Auth card -->
+        <div class="auth-card">
+            <div class="logo">
+                <i data-lucide="zap" class="logo-icon"></i>
+                <span class="logo-text">Stratagem AI</span>
+            </div>
+
+            <h1 class="auth-title" id="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle" id="auth-subtitle">Sign in to continue your strategic analysis</p>
+
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form">
+                <div class="input-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="your@email.com" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="auth-btn" id="login-btn">
+                    <span>Sign In</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </form>
+
+            <!-- Signup Form (hidden by default) -->
+            <form id="signup-form" class="auth-form hidden">
+                <div class="input-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" placeholder="your@email.com" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" placeholder="••••••••" minlength="6" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="signup-password-confirm">Confirm Password</label>
+                    <input type="password" id="signup-password-confirm" placeholder="••••••••" minlength="6" required>
+                </div>
+
+                <button type="submit" class="auth-btn" id="signup-btn">
+                    <span>Create Account</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </form>
+
+            <!-- Toggle between login/signup -->
+            <div class="auth-toggle">
+                <span id="toggle-text">Don't have an account?</span>
+                <button type="button" id="toggle-btn" class="toggle-link">Sign Up</button>
+            </div>
+
+            <!-- Error message -->
+            <div class="error-message hidden" id="error-message"></div>
+        </div>
+    </div>
+
+    <script src="/static/login.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
