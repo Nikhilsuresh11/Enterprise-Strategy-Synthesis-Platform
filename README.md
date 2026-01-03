@@ -11,7 +11,7 @@ Transform strategic questions into comprehensive consulting presentations with f
 ### Multi-Agent Architecture
 - **Research Agent**: RAG-powered research with 1000+ case studies, real-time news, financial data
 - **Analyst Agent**: Market sizing, Financial modeling
-- **Regulatory Agent**: FDI analysis, tax implications, geopolitical risk, compliance roadmap
+- **Regulatory Agent**: Tax implications, geopolitical risk, compliance roadmap
 - **Synthesizer Agent**: Executive summaries, implementation roadmaps, 12-15 slide decks
 
 ### Professional Outputs
