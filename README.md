@@ -58,6 +58,6 @@ Transform strategic questions into comprehensive consulting presentations with f
 
 ---
 
-**Built with ❤️ for strategic decision-making**
+**Built for strategic decision-making**
 
 *Transform strategic questions into actionable insights in under 90 seconds.*
