@@ -460,7 +460,8 @@ class ResearchAgent:
             response = await self.llm.generate_structured_output(
                 prompt=prompt,
                 system_prompt="You are a competitive intelligence analyst.",
-                response_schema=[]
+                response_schema=[],
+                model=self.llm.groq_fast_model
             )
             
             logger.info("competitors_identified", count=len(response) if isinstance(response, list) else 0)
@@ -496,15 +497,15 @@ class ResearchAgent:
         try:
             logger.info("consolidating_research_data")
             
-            # Format inputs for LLM
+            # Format inputs for LLM - Pruned for token efficiency
             rag_text = "\n\n".join([
-                f"[{doc.get('metadata', {}).get('source', 'Unknown')}]: {doc.get('text', '')[:300]}"
-                for doc in rag_context[:10]
+                f"[{doc.get('metadata', {}).get('source', 'Unknown')}]: {doc.get('text', '')[:200]}"
+                for doc in rag_context[:5]
             ])
             
             news_text = "\n\n".join([
-                f"[{article.get('source', 'Unknown')} - {article.get('published_at', '')}]: {article.get('title', '')} - {article.get('summary', '')[:200]}"
-                for article in news[:10]
+                f"[{article.get('source', 'Unknown')}]: {article.get('title', '')} - {article.get('summary', '')[:150]}"
+                for article in news[:5]
             ])
             
             financials_text = json.dumps(financials, indent=2)
@@ -513,8 +514,8 @@ class ResearchAgent:
             
             # Generate consolidation prompt
             prompt = CONSOLIDATE_RESEARCH_PROMPT.format(
-                rag_context=rag_text,
-                news=news_text,
+                rag_context=rag_text or "No specific RAG context found.",
+                news=news_text or "No recent news found.",
                 financials=financials_text,
                 regulatory=regulatory_text,
                 competitors=competitors_text,
@@ -561,27 +562,6 @@ class ResearchAgent:
                 'citations': [],
                 'timestamp': datetime.utcnow().isoformat()
             }
-    
-    async def extract_key_facts(self, text: str) -> List[Dict[str, Any]]:
-        """
-        Extract key facts from unstructured text.
-        
-        Args:
-            text: Input text
-            
-        Returns:
-            List of facts with confidence scores
-        """
-        try:
-            prompt = EXTRACT_KEY_FACTS_PROMPT.format(text=text)
-            
-            facts = await self.llm.generate_structured_output(
-                prompt=prompt,
-                system_prompt="You are a data analyst extracting facts.",
-                response_schema=[]
-            )
-            
-            return facts if isinstance(facts, list) else []
             
         except Exception as e:
             logger.error("fact_extraction_failed", error=str(e))

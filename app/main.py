@@ -92,6 +92,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         
         llm_service = LLMService(
             groq_api_key=settings.groq_api_key,
+            groq_model=settings.groq_model,
+            groq_fast_model=settings.groq_fast_model,
             openrouter_api_key=settings.openrouter_api_key,
             openrouter_model=settings.openrouter_model,
             openrouter_site_url=settings.openrouter_site_url,

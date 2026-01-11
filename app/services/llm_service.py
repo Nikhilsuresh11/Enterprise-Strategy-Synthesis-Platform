@@ -25,20 +25,22 @@ class LLMService:
         groq_api_key: str,
         openrouter_api_key: Optional[str] = None,
         groq_model: str = "llama-3.3-70b-versatile",
+        groq_fast_model: str = "llama-3-8b-8192",
         openrouter_model: str = "google/gemini-2.0-flash-exp:free",
         openrouter_site_url: str = "",
         openrouter_site_name: str = "Enterprise Strategy Platform",
-        max_retries: int = 3,
-        retry_delay: float = 2.0,
-        rate_limit_delay: float = 1.0
+        max_retries: int = 5,
+        retry_delay: float = 3.0,
+        rate_limit_delay: float = 2.0
     ) -> None:
         """
-        Initialize LLM service with multi-provider support.
+        Initialize LLM service with multi-provider and multi-tier model support.
         
         Args:
             groq_api_key: Groq API key (primary provider)
             openrouter_api_key: OpenRouter API key (fallback provider)
-            groq_model: Groq model name
+            groq_model: Groq primary (intelligence) model name
+            groq_fast_model: Groq secondary (flash/speed) model name
             openrouter_model: OpenRouter model name
             openrouter_site_url: Site URL for OpenRouter rankings
             openrouter_site_name: Site name for OpenRouter rankings
@@ -49,6 +51,7 @@ class LLMService:
         self.groq_api_key = groq_api_key
         self.openrouter_api_key = openrouter_api_key
         self.groq_model = groq_model
+        self.groq_fast_model = groq_fast_model
         self.openrouter_model = openrouter_model
         self.openrouter_site_url = openrouter_site_url
         self.openrouter_site_name = openrouter_site_name
@@ -140,11 +143,13 @@ class LLMService:
         self,
         messages: List[Dict[str, str]],
         temperature: float,
-        max_tokens: int
+        max_tokens: int,
+        model: Optional[str] = None
     ) -> str:
         """Call Groq API."""
+        target_model = model or self.groq_model
         response = await self.groq_client.chat.completions.create(
-            model=self.groq_model,
+            model=target_model,
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens
@@ -181,7 +186,8 @@ class LLMService:
         prompt: str,
         system_message: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: int = 2048
+        max_tokens: int = 2048,
+        model: Optional[str] = None
     ) -> str:
         """
         Generate text using LLM with automatic fallback and retry logic.
@@ -191,6 +197,7 @@ class LLMService:
             system_message: Optional system message
             temperature: Sampling temperature
             max_tokens: Maximum tokens to generate
+            model: Optional model override (uses default groq_model if None)
             
         Returns:
             Generated text
@@ -225,10 +232,11 @@ class LLMService:
             
             # Try Groq first
             try:
-                result = await self._call_groq(messages, temperature, max_tokens)
+                result = await self._call_groq(messages, temperature, max_tokens, model=model)
                 logger.debug(
                     "llm_generation_complete",
                     provider="groq",
+                    model=model or self.groq_model,
                     prompt_length=len(prompt),
                     response_length=len(result)
                 )
@@ -309,7 +317,8 @@ class LLMService:
         self,
         prompt: str,
         system_prompt: str,
-        response_schema: Dict[str, Any]
+        response_schema: Dict[str, Any],
+        model: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Generate structured JSON output from LLM.
@@ -318,6 +327,7 @@ class LLMService:
             prompt: User prompt
             system_prompt: System prompt describing the task
             response_schema: Expected JSON schema
+            model: Optional model override
             
         Returns:
             Structured output matching schema
@@ -334,7 +344,8 @@ class LLMService:
             response_text = await self.generate(
                 prompt=prompt,
                 system_message=enhanced_system,
-                temperature=0.3  # Lower temperature for structured output
+                temperature=0.3,  # Lower temperature for structured output
+                model=model
             )
             
             # Parse JSON
@@ -359,7 +370,8 @@ class LLMService:
         self,
         query: str,
         context: str,
-        agent_role: str
+        agent_role: str,
+        model: Optional[str] = None
     ) -> str:
         """
         Main analysis method with RAG context.
@@ -368,6 +380,7 @@ class LLMService:
             query: Analysis query
             context: Retrieved RAG context
             agent_role: Role of the agent (researcher, analyst, etc.)
+            model: Optional model override
             
         Returns:
             Analysis result
@@ -410,7 +423,8 @@ class LLMService:
             prompt=enhanced_prompt,
             system_message=system_prompt,
             temperature=0.7,
-            max_tokens=2048
+            max_tokens=2048,
+            model=model
         )
     
     async def extract_entities(
@@ -445,7 +459,8 @@ class LLMService:
             result = await self.generate_structured_output(
                 prompt=prompt,
                 system_prompt=system_prompt,
-                response_schema=schema
+                response_schema=schema,
+                model=self.groq_fast_model
             )
             return result
         except Exception as e:

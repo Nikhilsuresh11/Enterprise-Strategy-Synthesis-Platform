@@ -641,7 +641,8 @@ class AnalystAgent:
             result = await self.llm.generate_structured_output(
                 prompt=prompt,
                 system_prompt="You are a competitive intelligence analyst.",
-                response_schema={}
+                response_schema={},
+                model=self.llm.groq_fast_model
             )
             
             return result if isinstance(result, dict) else {
@@ -687,7 +688,8 @@ class AnalystAgent:
             result = await self.llm.generate_structured_output(
                 prompt=prompt,
                 system_prompt="You are a strategy consultant conducting Porter's Five Forces analysis.",
-                response_schema={}
+                response_schema={},
+                model=self.llm.groq_fast_model
             )
             
             return result if isinstance(result, dict) else {

@@ -242,7 +242,8 @@ class RegulatoryAgent:
             result = await self.llm.generate_structured_output(
                 prompt=prompt,
                 system_prompt="You are a regulatory expert analyzing FDI regulations.",
-                response_schema={}
+                response_schema={},
+                model=self.llm.groq_fast_model
             )
             
             return result if isinstance(result, dict) else fdi_policy
@@ -286,7 +287,8 @@ class RegulatoryAgent:
             result = await self.llm.generate_structured_output(
                 prompt=prompt,
                 system_prompt="You are a regulatory compliance expert.",
-                response_schema={}
+                response_schema={},
+                model=self.llm.groq_fast_model
             )
             
             return result if isinstance(result, dict) else {
@@ -375,7 +377,8 @@ class RegulatoryAgent:
             result = await self.llm.generate_structured_output(
                 prompt=prompt,
                 system_prompt="You are a geopolitical risk analyst.",
-                response_schema={}
+                response_schema={},
+                model=self.llm.groq_fast_model
             )
             
             if isinstance(result, dict):

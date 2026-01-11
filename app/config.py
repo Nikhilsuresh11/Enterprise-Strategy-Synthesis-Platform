@@ -17,6 +17,14 @@ class Settings(BaseSettings):
     newsapi_key: str = Field(default="", description="NewsAPI key (optional, free tier available)")
     
     # LLM Configuration
+    groq_model: str = Field(
+        default="llama-3.3-70b-versatile",
+        description="Default Groq model for complex reasoning"
+    )
+    groq_fast_model: str = Field(
+        default="llama-3-8b-8192",
+        description="Fast Groq model for lightweight tasks"
+    )
     openrouter_model: str = Field(
         default="google/gemini-2.0-flash-exp:free",
         description="OpenRouter model to use as fallback"
