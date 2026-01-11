@@ -49,6 +49,7 @@ requests
 # External Data Sources
 yfinance
 newsapi-python
+Wikipedia-API
 beautifulsoup4
 lxml
 
