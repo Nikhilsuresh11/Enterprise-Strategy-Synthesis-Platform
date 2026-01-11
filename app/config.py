@@ -13,7 +13,34 @@ class Settings(BaseSettings):
 
     # API Keys
     groq_api_key: str = Field(..., description="Groq API key for LLM access")
+    openrouter_api_key: str = Field(default="", description="OpenRouter API key (fallback provider)")
     newsapi_key: str = Field(default="", description="NewsAPI key (optional, free tier available)")
+    
+    # LLM Configuration
+    openrouter_model: str = Field(
+        default="google/gemini-2.0-flash-exp:free",
+        description="OpenRouter model to use as fallback"
+    )
+    openrouter_site_url: str = Field(
+        default="",
+        description="Site URL for OpenRouter rankings (optional)"
+    )
+    openrouter_site_name: str = Field(
+        default="Enterprise Strategy Platform",
+        description="Site name for OpenRouter rankings (optional)"
+    )
+    llm_max_retries: int = Field(
+        default=5,
+        description="Maximum number of retries for LLM requests"
+    )
+    llm_retry_delay: float = Field(
+        default=3.0,
+        description="Initial retry delay in seconds (exponential backoff)"
+    )
+    llm_rate_limit_delay: float = Field(
+        default=2.0,
+        description="Delay between LLM requests to prevent rate limiting"
+    )
     
     # MongoDB Configuration
     mongodb_uri: str = Field(

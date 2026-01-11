@@ -223,32 +223,35 @@ class ResearchAgent:
             
             logger.info("gathering_rag_context", query=query[:50])
             
-            # Search across all namespaces
-            tasks = [
-                self.rag.semantic_search(
-                    query=f"{query} {company} {industry}",
-                    namespace="case_studies",
-                    top_k=5
-                ),
-                self.rag.semantic_search(
-                    query=f"{industry} market analysis",
-                    namespace="industry_reports",
-                    top_k=3
-                ),
-                self.rag.semantic_search(
-                    query="financial analysis framework",
-                    namespace="financial_templates",
-                    top_k=2
-                )
-            ]
+            # Sequential RAG searches to avoid rate limiting on free tier
+            # Search case studies
+            case_studies = await self.rag.semantic_search(
+                query=f"{query} {company} {industry}",
+                namespace="case_studies",
+                top_k=5
+            )
             
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+            # Search industry reports
+            industry_reports = await self.rag.semantic_search(
+                query=f"{industry} market analysis",
+                namespace="industry_reports",
+                top_k=3
+            )
             
-            # Flatten results
+            # Search financial templates
+            financial_templates = await self.rag.semantic_search(
+                query="financial analysis framework",
+                namespace="financial_templates",
+                top_k=2
+            )
+            
+            # Combine all results
             all_docs = []
-            for result in results:
+            for result in [case_studies, industry_reports, financial_templates]:
                 if isinstance(result, list):
                     all_docs.extend(result)
+                elif isinstance(result, Exception):
+                    logger.warning("rag_search_failed", error=str(result))
             
             logger.info("rag_context_gathered", doc_count=len(all_docs))
             return all_docs

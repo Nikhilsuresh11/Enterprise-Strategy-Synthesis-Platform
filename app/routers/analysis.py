@@ -12,7 +12,6 @@ from app.models.schemas import AnalysisRequest, AnalysisResponse, AnalysisStatus
 from app.services.db_service import DatabaseService
 from app.config import get_settings
 from app.utils.logger import get_logger
-from app.utils.validators import validate_company_name, validate_industry, validate_job_id
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["analysis"])
@@ -176,20 +175,6 @@ async def create_analysis(
     request: AnalysisRequest,
     background_tasks: BackgroundTasks
 ) -> AnalysisResponse:
-    """Create a new analysis job."""
-    # Validate inputs
-    if not validate_company_name(request.company_name):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid company name format"
-        )
-    
-    if not validate_industry(request.industry):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid industry format"
-        )
-    
     try:
         # Create session data
         session_data = {
@@ -243,13 +228,6 @@ async def create_analysis(
 )
 async def get_analysis_status(job_id: str) -> AnalysisResponse:
     """Get analysis job status."""
-    # Validate job ID format
-    if not validate_job_id(job_id):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid job ID format"
-        )
-    
     try:
         # Retrieve session
         session = await db_service.get_analysis_session(job_id)
@@ -288,12 +266,6 @@ async def get_analysis_status(job_id: str) -> AnalysisResponse:
 )
 async def get_analysis_results(job_id: str) -> Dict:
     """Get complete analysis results."""
-    if not validate_job_id(job_id):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid job ID format"
-        )
-    
     try:
         session = await db_service.get_analysis_session(job_id)
         
@@ -328,12 +300,6 @@ async def get_analysis_results(job_id: str) -> Dict:
 )
 async def download_file(job_id: str, format: str):
     """Download generated file."""
-    if not validate_job_id(job_id):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid job ID format"
-        )
-    
     if format not in ["pdf", "pptx", "json"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

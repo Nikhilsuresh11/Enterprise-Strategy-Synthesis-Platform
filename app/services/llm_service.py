@@ -1,10 +1,14 @@
-"""LLM service for interacting with Groq API."""
+"""LLM service for interacting with Groq API and OpenRouter fallback."""
 
 from typing import Any, Dict, List, Optional
 import json
+import asyncio
+from datetime import datetime
 
-from groq import AsyncGroq
+from groq import AsyncGroq, RateLimitError, APIError
+from openai import AsyncOpenAI
 
+from app.services.rate_limiter import RateLimiter
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -12,22 +16,165 @@ logger = get_logger(__name__)
 
 class LLMService:
     """
-    LLM service for generating content using Groq API (Mixtral model).
+    LLM service with multi-provider support (Groq primary, OpenRouter fallback).
+    Includes rate limiting, retry logic, and automatic fallback on errors.
     """
     
-    def __init__(self, api_key: str, model: str = "llama-3.3-70b-versatile") -> None:
+    def __init__(
+        self,
+        groq_api_key: str,
+        openrouter_api_key: Optional[str] = None,
+        groq_model: str = "llama-3.3-70b-versatile",
+        openrouter_model: str = "google/gemini-2.0-flash-exp:free",
+        openrouter_site_url: str = "",
+        openrouter_site_name: str = "Enterprise Strategy Platform",
+        max_retries: int = 3,
+        retry_delay: float = 2.0,
+        rate_limit_delay: float = 1.0
+    ) -> None:
         """
-        Initialize LLM service.
+        Initialize LLM service with multi-provider support.
         
         Args:
-            api_key: Groq API key
-            model: Model name to use (default: llama-3.3-70b-versatile)
+            groq_api_key: Groq API key (primary provider)
+            openrouter_api_key: OpenRouter API key (fallback provider)
+            groq_model: Groq model name
+            openrouter_model: OpenRouter model name
+            openrouter_site_url: Site URL for OpenRouter rankings
+            openrouter_site_name: Site name for OpenRouter rankings
+            max_retries: Maximum retry attempts
+            retry_delay: Initial retry delay (exponential backoff)
+            rate_limit_delay: Delay between requests to prevent rate limiting
         """
-        self.api_key = api_key
-        self.model = model
-        self.client = AsyncGroq(api_key=api_key)
+        self.groq_api_key = groq_api_key
+        self.openrouter_api_key = openrouter_api_key
+        self.groq_model = groq_model
+        self.openrouter_model = openrouter_model
+        self.openrouter_site_url = openrouter_site_url
+        self.openrouter_site_name = openrouter_site_name
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
+        self.rate_limit_delay = rate_limit_delay
         
-        logger.info("llm_service_initialized", model=model)
+        # Initialize Groq client with retries disabled (we handle retries ourselves)
+        self.groq_client = AsyncGroq(
+            api_key=groq_api_key,
+            max_retries=0  # Disable Groq's built-in retry to allow our fallback logic
+        )
+        
+        # Initialize OpenRouter client if API key provided
+        self.openrouter_client = None
+        if openrouter_api_key:
+            self.openrouter_client = AsyncOpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=openrouter_api_key
+            )
+        
+        # Track last request time for rate limiting
+        self.last_request_time = None
+        
+        # Track provider health
+        self.groq_available = True
+        self.openrouter_available = bool(openrouter_api_key)
+        
+        # Initialize rate limiter for free tier
+        # Groq free tier: 14,400 TPM, ~30 RPM (but we use 10 to be safe)
+        self.rate_limiter = RateLimiter(
+            calls_per_minute=10,
+            tokens_per_minute=14400,  # Groq free tier TPM limit
+            min_delay_seconds=5.0     # Conservative delay
+        )
+        
+        logger.info(
+            "llm_service_initialized",
+            groq_model=groq_model,
+            openrouter_model=openrouter_model,
+            has_fallback=self.openrouter_available,
+            rate_limit="10 RPM, 14400 TPM, 5s min delay"
+        )
+    
+    def _extract_wait_time(self, error_message: str) -> float:
+        """
+        Extract wait time from rate limit error message.
+        
+        Parses messages like:
+        - "Please try again in 779.999999ms"
+        - "Please try again in 7.28s"
+        
+        Args:
+            error_message: The error message from the API
+            
+        Returns:
+            Wait time in seconds, or 0 if not found
+        """
+        import re
+        
+        # Look for "try again in X.XXms" or "try again in X.XXs"
+        patterns = [
+            r'try again in (\d+\.?\d*)ms',   # milliseconds
+            r'try again in (\d+\.?\d*)s',    # seconds
+            r'Please retry in (\d+\.?\d*)s', # alternative format
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, error_message, re.IGNORECASE)
+            if match:
+                value = float(match.group(1))
+                # Convert ms to seconds if needed
+                if 'ms' in pattern:
+                    value = value / 1000
+                # Add small buffer
+                return value + 0.5
+        
+        return 0.0
+    
+    async def _rate_limit(self) -> None:
+        """Apply rate limiting between requests."""
+        if self.last_request_time and self.rate_limit_delay > 0:
+            elapsed = (datetime.now() - self.last_request_time).total_seconds()
+            if elapsed < self.rate_limit_delay:
+                await asyncio.sleep(self.rate_limit_delay - elapsed)
+        self.last_request_time = datetime.now()
+    
+    async def _call_groq(
+        self,
+        messages: List[Dict[str, str]],
+        temperature: float,
+        max_tokens: int
+    ) -> str:
+        """Call Groq API."""
+        response = await self.groq_client.chat.completions.create(
+            model=self.groq_model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
+        return response.choices[0].message.content
+    
+    async def _call_openrouter(
+        self,
+        messages: List[Dict[str, str]],
+        temperature: float,
+        max_tokens: int
+    ) -> str:
+        """Call OpenRouter API."""
+        if not self.openrouter_client:
+            raise ValueError("OpenRouter client not initialized")
+        
+        extra_headers = {}
+        if self.openrouter_site_url:
+            extra_headers["HTTP-Referer"] = self.openrouter_site_url
+        if self.openrouter_site_name:
+            extra_headers["X-Title"] = self.openrouter_site_name
+        
+        response = await self.openrouter_client.chat.completions.create(
+            model=self.openrouter_model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            extra_headers=extra_headers if extra_headers else None
+        )
+        return response.choices[0].message.content
     
     async def generate(
         self,
@@ -37,7 +184,7 @@ class LLMService:
         max_tokens: int = 2048
     ) -> str:
         """
-        Generate text using LLM.
+        Generate text using LLM with automatic fallback and retry logic.
         
         Args:
             prompt: User prompt
@@ -48,40 +195,115 @@ class LLMService:
         Returns:
             Generated text
         """
-        try:
-            messages = []
-            
-            if system_message:
-                messages.append({
-                    "role": "system",
-                    "content": system_message
-                })
-            
+        # Apply rate limiting (enforces minimum delay and calls/minute limit)
+        # Pass prompt length for token estimation
+        await self.rate_limiter.acquire(estimated_prompt_length=len(prompt))
+        
+        # Build messages
+        messages = []
+        if system_message:
             messages.append({
-                "role": "user",
-                "content": prompt
+                "role": "system",
+                "content": system_message
             })
+        messages.append({
+            "role": "user",
+            "content": prompt
+        })
+        
+        # Retry loop with proper rate limit handling
+        attempts = 0
+        last_error = None
+        
+        while attempts < self.max_retries:
+            attempts += 1
             
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens
-            )
+            # Always reset groq_available at start of each attempt
+            # (it may have been marked unavailable in previous attempt)
+            if attempts > 1:
+                self.groq_available = True
             
-            result = response.choices[0].message.content
-            
-            logger.debug(
-                "llm_generation_complete",
-                prompt_length=len(prompt),
-                response_length=len(result)
-            )
-            
-            return result
-            
-        except Exception as e:
-            logger.error("llm_generation_failed", error=str(e))
-            raise
+            # Try Groq first
+            try:
+                result = await self._call_groq(messages, temperature, max_tokens)
+                logger.debug(
+                    "llm_generation_complete",
+                    provider="groq",
+                    prompt_length=len(prompt),
+                    response_length=len(result)
+                )
+                return result
+                
+            except (RateLimitError, Exception) as e:
+                error_str = str(e).lower()
+                is_rate_limit = (
+                    isinstance(e, RateLimitError) or
+                    "429" in error_str or 
+                    "rate limit" in error_str or 
+                    "too many requests" in error_str
+                )
+                
+                if is_rate_limit:
+                    # Extract wait time from error message
+                    wait_time = self._extract_wait_time(str(e))
+                    
+                    logger.warning(
+                        "groq_rate_limit_hit",
+                        attempt=attempts,
+                        max_attempts=self.max_retries,
+                        wait_time=wait_time,
+                        error=str(e)[:200]
+                    )
+                    
+                    # Try OpenRouter if available
+                    if self.openrouter_available:
+                        try:
+                            result = await self._call_openrouter(messages, temperature, max_tokens)
+                            logger.info(
+                                "llm_generation_complete_fallback",
+                                provider="openrouter"
+                            )
+                            return result
+                        except Exception as or_error:
+                            logger.warning(
+                                "openrouter_also_failed",
+                                error=str(or_error)[:200]
+                            )
+                            # Fall through to wait and retry Groq
+                    
+                    # Wait before retrying Groq
+                    if attempts < self.max_retries:
+                        if wait_time > 0:
+                            # Use the wait time from error message
+                            logger.info("waiting_for_rate_limit_reset", wait_seconds=wait_time)
+                            await asyncio.sleep(wait_time)
+                        else:
+                            # Use exponential backoff
+                            delay = self.retry_delay * (2 ** (attempts - 1))
+                            delay = min(delay, 30)  # Cap at 30 seconds
+                            logger.info("waiting_with_backoff", delay=delay)
+                            await asyncio.sleep(delay)
+                        continue
+                    else:
+                        last_error = e
+                else:
+                    # Non-rate-limit error
+                    last_error = e
+                    logger.error("llm_non_rate_limit_error", error=str(e))
+                    
+                    # For non-rate-limit errors, wait and retry
+                    if attempts < self.max_retries:
+                        delay = self.retry_delay * attempts
+                        await asyncio.sleep(delay)
+                        continue
+        
+        # All retries exhausted
+        logger.error(
+            "llm_generation_failed_all_retries",
+            attempts=attempts,
+            error=str(last_error) if last_error else "Unknown error"
+        )
+        raise last_error or ValueError("LLM generation failed after all retries")
     
     async def generate_structured_output(
         self,
@@ -236,3 +458,4 @@ class LLMService:
                 "dates": [],
                 "numbers": []
             }
+

@@ -13,6 +13,7 @@ langchain-community
 langchain-groq
 langgraph
 groq
+openai  # For OpenRouter API fallback
 
 # Database
 pymongo
@@ -48,16 +49,13 @@ requests
 # External Data Sources
 yfinance
 newsapi-python
-Wikipedia-API
 beautifulsoup4
 lxml
 
 # Utilities
 python-dotenv
-tenacity
 structlog
 psutil
 
 # Performance & Caching
 cachetools  # In-memory caching
-aiocache    # Async caching

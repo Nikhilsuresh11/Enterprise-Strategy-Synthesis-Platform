@@ -90,7 +90,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         else:
             logger.info("rag_service_disabled_by_config")
         
-        llm_service = LLMService(api_key=settings.groq_api_key)
+        llm_service = LLMService(
+            groq_api_key=settings.groq_api_key,
+            openrouter_api_key=settings.openrouter_api_key,
+            openrouter_model=settings.openrouter_model,
+            openrouter_site_url=settings.openrouter_site_url,
+            openrouter_site_name=settings.openrouter_site_name,
+            max_retries=settings.llm_max_retries,
+            retry_delay=settings.llm_retry_delay,
+            rate_limit_delay=settings.llm_rate_limit_delay
+        )
         
         external_service = ExternalDataService(newsapi_key=settings.newsapi_key)
         

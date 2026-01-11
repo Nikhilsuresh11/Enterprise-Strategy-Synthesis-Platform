@@ -85,40 +85,39 @@ class RegulatoryAgent:
                 target=target_country
             )
             
-            # Run all analyses in parallel for speed
-            logger.info("running_parallel_regulatory_analysis")
+            # Sequential execution to avoid rate limiting on free tier
+            logger.info("running_sequential_regulatory_analysis")
             
-            tasks = [
-                self.assess_fdi_regulations(
-                    source_country, target_country,
-                    request["industry"], json.dumps(research_data)[:1000]
-                ),
-                self.evaluate_sector_regulations(
-                    request["industry"], target_country, "B2C"
-                ),
-                self.analyze_tax_implications(
-                    "subsidiary", [source_country, target_country]
-                ),
-                self.assess_geopolitical_risk(
-                    target_country, request["industry"],
-                    json.dumps(research_data)[:1000]
-                ),
-                self.evaluate_trade_barriers(
-                    source_country, target_country, request["industry"]
-                ),
-                self.assess_labor_regulations(target_country, request["industry"])
-            ]
+            # Execute each analysis sequentially
+            logger.info("assessing_fdi_regulations")
+            fdi = await self.assess_fdi_regulations(
+                source_country, target_country,
+                request["industry"], json.dumps(research_data)[:1000]
+            )
             
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+            logger.info("evaluating_sector_regulations")
+            sector_reg = await self.evaluate_sector_regulations(
+                request["industry"], target_country, "B2C"
+            )
             
-            fdi, sector_reg, tax, geopolitical, trade, labor = results
+            logger.info("analyzing_tax_implications")
+            tax = await self.analyze_tax_implications(
+                "subsidiary", [source_country, target_country]
+            )
             
-            # Handle exceptions
-            for i, result in enumerate(results):
-                if isinstance(result, Exception):
-                    error_msg = f"Regulatory task {i} failed: {str(result)}"
-                    state["errors"].append(error_msg)
-                    logger.error(f"regulatory_task_{i}_failed", error=str(result))
+            logger.info("assessing_geopolitical_risk")
+            geopolitical = await self.assess_geopolitical_risk(
+                target_country, request["industry"],
+                json.dumps(research_data)[:1000]
+            )
+            
+            logger.info("evaluating_trade_barriers")
+            trade = await self.evaluate_trade_barriers(
+                source_country, target_country, request["industry"]
+            )
+            
+            logger.info("assessing_labor_regulations")
+            labor = await self.assess_labor_regulations(target_country, request["industry"])
             
             # Create consolidated findings
             all_findings = {
