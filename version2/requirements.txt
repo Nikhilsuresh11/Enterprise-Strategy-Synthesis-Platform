@@ -1,0 +1,58 @@
+# Free-tier optimized requirements
+
+# Core Web Framework
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-multipart
+
+# LangChain & AI (minimal versions)
+langchain
+langchain-community
+langchain-groq
+langgraph
+groq
+openai  # For OpenRouter fallback
+
+# Database
+pymongo
+motor
+
+# Vector Database (NO sentence-transformers - using Pinecone inference)
+pinecone
+
+# Document Processing
+pypdf
+python-pptx
+reportlab
+
+# Data & Analytics
+pandas
+numpy
+plotly
+kaleido
+
+# HTTP & API
+httpx
+aiohttp
+requests
+
+# External Data Sources
+yfinance
+beautifulsoup4
+lxml
+wikipedia-api
+
+# Utilities
+python-dotenv
+structlog
+cachetools
+
+# Monitoring
+agentops
+
+# Authentication
+python-jose[cryptography]
+passlib
+bcrypt
