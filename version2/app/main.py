@@ -1,4 +1,4 @@
-"""FastAPI main application for Stratagem AI version 2."""
+"""FastAPI main application for Origin Labs version 2."""
 
 import os
 import time
@@ -148,7 +148,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 
 # Create FastAPI application
 app = FastAPI(
-    title="Stratagem AI v2",
+    title="Origin Labs API",
     description="Enterprise Multi-Agent Strategy Research Platform",
     version="2.0.0",
     docs_url="/docs",
@@ -170,7 +170,7 @@ app.add_middleware(
 async def root():
     """Root endpoint."""
     return {
-        "name": "Stratagem AI v2",
+        "name": "Origin Labs",
         "version": "2.0.0",
         "status": "running"
     }

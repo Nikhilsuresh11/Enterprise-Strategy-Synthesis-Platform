@@ -28,7 +28,7 @@ class ExternalDataService:
     def __init__(self, cache: CacheService, newsapi_key: Optional[str] = None):
         self.cache = cache
         self.newsapi_key = newsapi_key
-        self.wiki = wikipediaapi.Wikipedia('Stratagem/1.0', 'en')
+        self.wiki = wikipediaapi.Wikipedia('OriginLabs/1.0', 'en')
         
         logger.info("external_data_service_initialized")
     

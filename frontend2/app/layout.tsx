@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Stratagem AI - Enterprise Strategy Analysis",
+  title: "Origin Labs - Enterprise Strategy Analysis",
   description: "AI-powered strategic insights for your business decisions",
 };
 

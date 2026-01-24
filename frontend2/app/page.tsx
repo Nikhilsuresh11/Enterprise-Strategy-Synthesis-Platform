@@ -36,9 +36,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-              S
+              O
             </div>
-            <span className="text-xl font-bold text-gray-900">Stratagem AI</span>
+            <span className="text-xl font-bold text-gray-900">Origin Labs</span>
           </div>
           <button
             onClick={() => router.push("/chat")}
@@ -160,7 +160,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-white/80 backdrop-blur-sm mt-20">
         <div className="max-w-7xl mx-auto px-6 py-8 text-center text-gray-600 text-sm">
-          <p>© 2026 Stratagem AI. Enterprise-Grade Strategy Research Platform.</p>
+          <p>© 2026 Origin Labs. Enterprise-Grade Strategy Research Platform.</p>
         </div>
       </footer>
     </div>
