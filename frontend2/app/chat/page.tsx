@@ -157,7 +157,7 @@ export default function ModernChatPage() {
         const analyzingMessage: Message = {
             id: Date.now().toString(),
             role: "assistant",
-            content: `Perfect! Starting comprehensive MBB-grade analysis of ${finalCompanyName}. This will take 10-30 seconds...`,
+            content: `Perfect! Starting comprehensive strategic analysis of ${finalCompanyName}. This will take 10-30 seconds...`,
             timestamp: new Date().toISOString(),
         };
 
@@ -305,8 +305,8 @@ export default function ModernChatPage() {
                             >
                                 <div
                                     className={`max-w-[80%] ${message.role === "user"
-                                            ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-3xl rounded-tr-sm"
-                                            : "bg-white text-gray-800 rounded-3xl border border-gray-200"
+                                        ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-3xl rounded-tr-sm"
+                                        : "bg-white text-gray-800 rounded-3xl border border-gray-200"
                                         } px-6 py-4`}
                                 >
                                     <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -342,7 +342,7 @@ export default function ModernChatPage() {
                                     <div className="flex items-center space-x-3">
                                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
                                         <span className="text-purple-800 font-medium">
-                                            Running MBB-grade analysis...
+                                            Running strategic analysis...
                                         </span>
                                     </div>
                                 </div>
@@ -392,8 +392,8 @@ export default function ModernChatPage() {
                                                         href={`http://localhost:8000/download/${url}`}
                                                         download
                                                         className={`inline-flex items-center px-6 py-3 rounded-xl font-semibold transition-all ${isPDF
-                                                                ? 'bg-red-600 hover:bg-red-700 text-white hover:shadow-lg'
-                                                                : 'bg-orange-600 hover:bg-orange-700 text-white hover:shadow-lg'
+                                                            ? 'bg-red-600 hover:bg-red-700 text-white hover:shadow-lg'
+                                                            : 'bg-orange-600 hover:bg-orange-700 text-white hover:shadow-lg'
                                                             }`}
                                                     >
                                                         {isPDF ? '📄 Download PDF Report' : '📊 Download Pitch Deck'}

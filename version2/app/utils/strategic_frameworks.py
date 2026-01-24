@@ -1,4 +1,4 @@
-"""Strategic Frameworks Library for MBB-Grade Analysis."""
+"""Strategic Frameworks Library for Professional Analysis."""
 
 from typing import Dict, List, Any
 from enum import Enum

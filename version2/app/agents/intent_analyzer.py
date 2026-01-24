@@ -1,4 +1,4 @@
-"""Enterprise-Grade Intent Analyzer with MBB-Level Strategic Thinking."""
+"""Enterprise-Grade Intent Analyzer with Professional Strategic Thinking."""
 
 from typing import Dict, Any, List, Optional
 from app.agents.base import BaseAgent
@@ -170,19 +170,19 @@ Focus on understanding the strategic intent and business context.
         context: Dict[str, Any],
         company_name: str
     ) -> Dict[str, Any]:
-        """Form strategic hypotheses like an MBB consultant."""
+        """Form strategic hypotheses like a professional consultant."""
         
         analysis_type = context.get("analysis_type", "general_research")
         core_question = context.get("core_question", f"Analyze {company_name}")
         
-        prompt = f"""You are an MBB consultant. Form strategic hypotheses for this analysis.
+        prompt = f"""You are a professional strategy consultant. Form strategic hypotheses for this analysis.
 
 Company: {company_name}
 Analysis Type: {analysis_type}
 Core Question: {core_question}
 Context: {json.dumps(context, indent=2)}
 
-Generate strategic hypotheses following MBB methodology. Return ONLY a JSON object:
+Generate strategic hypotheses following professional consulting methodology. Return ONLY a JSON object:
 {{
     "primary_hypothesis": "Main hypothesis that answers the core question",
     "sub_hypotheses": [
@@ -223,7 +223,7 @@ Make hypotheses:
         
         core_question = context.get("core_question", f"Analyze {company_name}")
         
-        prompt = f"""You are an MBB consultant. Build a MECE (Mutually Exclusive, Collectively Exhaustive) issue tree.
+        prompt = f"""You are a professional strategy consultant. Build a MECE (Mutually Exclusive, Collectively Exhaustive) issue tree.
 
 Company: {company_name}
 Core Question: {core_question}

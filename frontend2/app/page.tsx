@@ -9,8 +9,8 @@ export default function LandingPage() {
   const features = [
     {
       icon: <Brain className="w-6 h-6" />,
-      title: "MBB-Grade Analysis",
-      description: "Strategic thinking powered by McKinsey, BCG, and Bain frameworks"
+      title: "Professional Analysis",
+      description: "Strategic thinking powered by proven consulting frameworks"
     },
     {
       icon: <Sparkles className="w-6 h-6" />,
@@ -69,8 +69,8 @@ export default function LandingPage() {
 
           {/* Subheading */}
           <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Get MBB-level strategic analysis in minutes. Our AI platform uses frameworks from
-            McKinsey, BCG, and Bain to deliver enterprise-grade insights.
+            Get professional strategic analysis in minutes. Our AI platform uses proven
+            consulting frameworks to deliver enterprise-grade insights.
           </p>
 
           {/* CTA Buttons */}
@@ -126,7 +126,7 @@ export default function LandingPage() {
               "Ansoff Matrix",
               "PESTEL Analysis",
               "VRIO Framework",
-              "McKinsey 7S"
+              "7S Framework"
             ].map((framework, idx) => (
               <div
                 key={idx}
