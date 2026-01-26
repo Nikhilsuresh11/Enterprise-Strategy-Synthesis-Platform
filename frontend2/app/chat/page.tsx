@@ -6,6 +6,8 @@ import {
     User, Send, Paperclip, Image as ImageIcon, RefreshCw
 } from "lucide-react";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 interface Message {
     id: string;
     role: string;
@@ -76,7 +78,7 @@ export default function ModernChatPage() {
         setIsTyping(true);
 
         try {
-            const response = await fetch("http://localhost:8000/chat", {
+            const response = await fetch(`${API_BASE_URL}/chat`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -164,7 +166,7 @@ export default function ModernChatPage() {
         setMessages((prev) => [...prev, analyzingMessage]);
 
         try {
-            const response = await fetch("http://localhost:8000/chat/analyze", {
+            const response = await fetch(`${API_BASE_URL}/chat/analyze`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -389,7 +391,7 @@ export default function ModernChatPage() {
                                                 return (
                                                     <a
                                                         key={idx}
-                                                        href={`http://localhost:8000/download/${url}`}
+                                                        href={`${API_BASE_URL}/download/${url}`}
                                                         download
                                                         className={`inline-flex items-center px-6 py-3 rounded-xl font-semibold transition-all ${isPDF
                                                             ? 'bg-red-600 hover:bg-red-700 text-white hover:shadow-lg'

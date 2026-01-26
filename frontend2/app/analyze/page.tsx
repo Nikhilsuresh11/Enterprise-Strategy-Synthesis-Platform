@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { getQuestions, runAnalysis } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/api";
 import type {
     Question,
     AnalysisResponse,
@@ -277,7 +278,7 @@ export default function AnalyzePage() {
                             {analysisResponse.output_urls && analysisResponse.output_urls.length > 0 && (
                                 <div className="mb-6">
                                     <a
-                                        href={`http://localhost:8000/download/${analysisResponse.output_urls[0]}`}
+                                        href={`${API_BASE_URL}/download/${analysisResponse.output_urls[0]}`}
                                         download
                                         className="inline-flex items-center px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors"
                                     >
