@@ -6,12 +6,16 @@ export interface QuestionRequest {
 }
 
 export interface Question {
+    id: string;
     question: string;
+    text: string;
+    category: string;
     options: string[];
 }
 
 export interface QuestionResponse {
     questions: Question[];
+    session_id: string;
 }
 
 export interface AnalysisRequest {
@@ -85,4 +89,23 @@ export interface AnalysisData {
     financial_model?: FinancialModel;
     risk_assessment?: RiskAssessment;
     strategy_synthesis?: StrategySynthesis;
+}
+
+// Chat Types
+export interface ChatMessage {
+    role: "user" | "assistant";
+    content: string;
+}
+
+export interface ChatRequest {
+    session_id?: string;
+    message: string;
+    company_name?: string;
+}
+
+export interface ChatResponse {
+    session_id: string;
+    message: string;
+    action: "continue_chat" | "ready_for_analysis";
+    ready_to_analyze: boolean;
 }
