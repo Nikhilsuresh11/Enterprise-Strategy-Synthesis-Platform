@@ -167,8 +167,9 @@ app.add_middleware(
 
 
 @app.get("/")
+@app.head("/")
 async def root():
-    """Root endpoint."""
+    """Root endpoint - supports GET and HEAD for health checks."""
     return {
         "name": "Origin Labs",
         "version": "2.0.0",

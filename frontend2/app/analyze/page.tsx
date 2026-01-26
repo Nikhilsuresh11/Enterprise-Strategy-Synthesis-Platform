@@ -5,7 +5,6 @@ import { getQuestions, runAnalysis } from "@/lib/api";
 import type {
     Question,
     AnalysisResponse,
-    AnalysisData,
 } from "@/types";
 
 export default function AnalyzePage() {
