@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getQuestions, runAnalysis } from "@/lib/api";
+import { fetchQuestions, runAnalysis } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/api";
 import type {
     Question,
@@ -36,7 +36,7 @@ export default function AnalyzePage() {
 
         try {
             // Get clarifying questions
-            const response = await getQuestions({
+            const response = await fetchQuestions({
                 company_name: companyName,
                 industry: industry || undefined,
                 question: userQuestion,
