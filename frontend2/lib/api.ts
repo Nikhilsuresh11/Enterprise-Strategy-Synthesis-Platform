@@ -142,8 +142,10 @@ export async function sendChatMessage(payload: {
 }): Promise<{
     session_id: string;
     message: string;
-    action: string;
+    action?: string;
     ready_to_analyze: boolean;
+    companies?: string[];
+    analysis_type?: string;
 }> {
     return fetchAPI("/chat", {
         method: "POST",
