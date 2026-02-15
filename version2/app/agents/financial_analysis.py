@@ -94,9 +94,12 @@ class FinancialAnalysisAgent(BaseAgent):
     ) -> Dict[str, Any]:
         """Build comprehensive financial model using LLM."""
         
-        # Check for dynamic prompt from Intent Analyzer
         dynamic_prompts = state.get("dynamic_prompts", {}) if state else {}
         custom_prompt = dynamic_prompts.get("financial_analysis")
+        
+        # Format RAG context
+        rag_context = state.get("rag_context", []) if state else []
+        rag_text = "\n".join(rag_context[:3]) if rag_context else "No uploaded documents"
         
         if custom_prompt:
             # Use MBB-grade DuPont ROE Analysis prompt
@@ -111,6 +114,7 @@ Financial Data:
 - P/E Ratio: {financial_data.get('pe_ratio', 'N/A')}
 - Current Price: ${financial_data.get('current_price', 0):.2f}
 - 52-Week Range: ${financial_data.get('52_week_low', 0):.2f} - ${financial_data.get('52_week_high', 0):.2f}
+- Uploaded Documents: {rag_text[:1000]}
 
 Return ONLY a JSON object:
 {{
@@ -138,6 +142,7 @@ Financial Data:
 - P/E Ratio: {financial_data.get('pe_ratio', 'N/A')}
 - Current Price: ${financial_data.get('current_price', 0):.2f}
 - 52-Week Range: ${financial_data.get('52_week_low', 0):.2f} - ${financial_data.get('52_week_high', 0):.2f}
+- Uploaded Documents: {rag_text[:1000]}
 
 Return ONLY a JSON object:
 {{

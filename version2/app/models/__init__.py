@@ -14,6 +14,13 @@ from app.models.chat_schemas import (
     ChatResponse,
     StartAnalysisRequest
 )
+from app.models.user import (
+    UserRegister,
+    UserLogin,
+    UserResponse,
+    TokenResponse,
+    UserInDB
+)
 
 __all__ = [
     "AgentState",
@@ -26,4 +33,9 @@ __all__ = [
     "ChatRequest",
     "ChatResponse",
     "StartAnalysisRequest",
+    "UserRegister",
+    "UserLogin",
+    "UserResponse",
+    "TokenResponse",
+    "UserInDB",
 ]

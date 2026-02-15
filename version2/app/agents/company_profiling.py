@@ -100,9 +100,12 @@ class CompanyProfilingAgent(BaseAgent):
     ) -> Dict[str, Any]:
         """Use LLM to structure company profile from raw data."""
         
-        # Check if we have a dynamic prompt from Intent Analyzer
         dynamic_prompts = state.get("dynamic_prompts", {}) if state else {}
         custom_prompt = dynamic_prompts.get("company_profiling")
+        
+        # Format RAG context
+        rag_context = state.get("rag_context", []) if state else []
+        rag_text = "\n".join(rag_context[:3]) if rag_context else "No uploaded documents"
         
         if custom_prompt:
             # Use MBB-grade dynamic prompt with framework
@@ -110,11 +113,11 @@ class CompanyProfilingAgent(BaseAgent):
             
             prompt = f"""{custom_prompt}
 
-Data Available:
 - Industry: {industry or "Unknown"}
 - Wikipedia: {wiki_data.get("summary", "N/A")[:500]}
 - Recent News: {self._format_news(news_data)}
 - Financials: {self._format_financials(financial_data)}
+- Uploaded Documents: {rag_text[:1000]}
 
 Return ONLY a JSON object with these fields:
 {{
@@ -138,11 +141,11 @@ Keep each fact to ONE concise sentence. Focus on strategic value drivers and com
             
             prompt = f"""Analyze {company_name} and provide 4-5 KEY FACTS as bullet points.
 
-Data Available:
 - Industry: {industry or "Unknown"}
 - Wikipedia: {wiki_data.get("summary", "N/A")[:300]}
 - Recent News: {self._format_news(news_data)}
 - Financials: {self._format_financials(financial_data)}
+- Uploaded Documents: {rag_text[:1000]}
 
 Return ONLY a JSON object with these fields:
 {{

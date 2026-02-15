@@ -13,6 +13,7 @@ class AgentState(TypedDict, total=False):
     
     # Input
     request: Dict[str, Any]  # User request with company_name, question, etc.
+    rag_context: List[str]   # Relevant chunks from uploaded documents (RAG)
     
     # Agent Outputs
     company_profile: Dict[str, Any]  # Basic company information
