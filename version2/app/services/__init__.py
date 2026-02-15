@@ -8,6 +8,8 @@ from app.services.rate_limiter import MultiProviderRateLimiter
 from app.services.pitch_deck_service import PitchDeckService
 from app.services.question_service import QuestionService
 from app.services.pdf_report_service import PDFReportService
+from app.services.auth_service import AuthService
+from app.services.database_service import DatabaseService
 
 __all__ = [
     "CacheService",
@@ -18,4 +20,6 @@ __all__ = [
     "PitchDeckService",
     "QuestionService",
     "PDFReportService",
+    "AuthService",
+    "DatabaseService",
 ]

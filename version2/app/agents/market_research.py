@@ -80,11 +80,15 @@ class MarketResearchAgent(BaseAgent):
         """Analyze market size, trends, and dynamics."""
         
         # Query RAG for industry reports
-        rag_context = await self.rag.query(
+        internal_rag = await self.rag.query(
             query_text=f"market analysis trends {industry}",
             top_k=3,
             filter={"type": "industry_report"} if industry != "Unknown" else None
         )
+        
+        # Combine with uploaded docs from state
+        uploaded_docs = [{"text": t} for t in state.get("rag_context", [])] if state else []
+        rag_context = internal_rag + uploaded_docs
         
         # Build context from RAG results
         context_text = "\n".join([

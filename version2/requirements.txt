@@ -19,8 +19,9 @@ openai  # For OpenRouter fallback
 pymongo
 motor
 
-# Vector Database (NO sentence-transformers - using Pinecone inference)
+# Vector Database & Embeddings
 pinecone
+sentence-transformers
 
 # Document Processing
 pypdf

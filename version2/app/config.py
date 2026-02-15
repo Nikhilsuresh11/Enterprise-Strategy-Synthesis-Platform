@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expiration_minutes: int = 1440
     
+    # CORS
+    allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+    
     # Model Settings
     default_model: str = "llama-3.3-70b-versatile"
     fast_model: str = "llama-3.1-8b-instant"  # Fixed: was llama-3-8b-8192

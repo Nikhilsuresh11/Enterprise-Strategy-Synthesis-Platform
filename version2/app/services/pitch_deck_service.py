@@ -371,3 +371,133 @@ class PitchDeckService:
         qa_para.font.bold = True
         qa_para.font.color.rgb = self.primary_color
         qa_para.alignment = PP_ALIGN.CENTER
+
+    # ==================== Comparison Deck ====================
+
+    async def generate_comparison_deck(
+        self,
+        title: str,
+        companies: List[str],
+        comparison_data: Dict[str, Any],
+        output_path: str,
+    ) -> str:
+        """Generate a comparison pitch deck with side-by-side slides."""
+        logger.info("generating_comparison_deck", companies=companies)
+
+        prs = Presentation()
+        prs.slide_width = Inches(10)
+        prs.slide_height = Inches(7.5)
+
+        # Slide 1: Title
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        tb = slide.shapes.add_textbox(Inches(1), Inches(2.5), Inches(8), Inches(1))
+        tf = tb.text_frame
+        tf.text = title
+        p = tf.paragraphs[0]
+        p.font.size = Pt(40)
+        p.font.bold = True
+        p.font.color.rgb = self.primary_color
+        p.alignment = PP_ALIGN.CENTER
+
+        sub = slide.shapes.add_textbox(Inches(1), Inches(3.8), Inches(8), Inches(0.8))
+        sf = sub.text_frame
+        sf.text = "Comparative Strategic Analysis"
+        sp = sf.paragraphs[0]
+        sp.font.size = Pt(22)
+        sp.font.color.rgb = self.secondary_color
+        sp.alignment = PP_ALIGN.CENTER
+
+        date_box = slide.shapes.add_textbox(Inches(1), Inches(6.5), Inches(8), Inches(0.5))
+        df = date_box.text_frame
+        df.text = datetime.now().strftime("%B %Y")
+        dp = df.paragraphs[0]
+        dp.font.size = Pt(14)
+        dp.font.color.rgb = RGBColor(128, 128, 128)
+        dp.alignment = PP_ALIGN.CENTER
+
+        # One slide per category
+        categories = comparison_data.get("categories", [])
+        for cat in categories:
+            cat_name = cat.get("name", "")
+            rows = cat.get("rows", [])
+            if not rows:
+                continue
+
+            slide = prs.slides.add_slide(prs.slide_layouts[6])
+
+            # Category title
+            ttl = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(9), Inches(0.7))
+            ttf = ttl.text_frame
+            ttf.text = cat_name
+            tp = ttf.paragraphs[0]
+            tp.font.size = Pt(28)
+            tp.font.bold = True
+            tp.font.color.rgb = self.primary_color
+
+            # Build table
+            n_rows = len(rows) + 1  # +1 header
+            n_cols = 1 + len(companies)  # metric + companies
+
+            tbl_shape = slide.shapes.add_table(
+                n_rows, n_cols,
+                Inches(0.5), Inches(1.2), Inches(9), Inches(5.5),
+            )
+            tbl = tbl_shape.table
+
+            # Header row
+            tbl.cell(0, 0).text = "Metric"
+            for ci, c in enumerate(companies):
+                tbl.cell(0, ci + 1).text = c
+
+            # Style header
+            for ci in range(n_cols):
+                cell = tbl.cell(0, ci)
+                for para in cell.text_frame.paragraphs:
+                    para.font.size = Pt(14)
+                    para.font.bold = True
+                    para.font.color.rgb = RGBColor(255, 255, 255)
+                cell.fill.solid()
+                cell.fill.fore_color.rgb = RGBColor(30, 64, 175)
+
+            # Data rows
+            for ri, row in enumerate(rows):
+                tbl.cell(ri + 1, 0).text = row.get("metric", "")
+                for ci in range(len(companies)):
+                    tbl.cell(ri + 1, ci + 1).text = str(row.get(f"company_{ci}", "N/A"))
+
+                # Style data cells
+                for ci in range(n_cols):
+                    cell = tbl.cell(ri + 1, ci)
+                    for para in cell.text_frame.paragraphs:
+                        para.font.size = Pt(12)
+
+                    # Alternating row colors
+                    if ri % 2 == 1:
+                        cell.fill.solid()
+                        cell.fill.fore_color.rgb = RGBColor(243, 244, 246)
+
+        # Verdict slide
+        verdict = comparison_data.get("verdict", "")
+        if verdict:
+            slide = prs.slides.add_slide(prs.slide_layouts[6])
+            vt = slide.shapes.add_textbox(Inches(1), Inches(2), Inches(8), Inches(0.7))
+            vtf = vt.text_frame
+            vtf.text = "Verdict"
+            vp = vtf.paragraphs[0]
+            vp.font.size = Pt(36)
+            vp.font.bold = True
+            vp.font.color.rgb = self.primary_color
+            vp.alignment = PP_ALIGN.CENTER
+
+            vb = slide.shapes.add_textbox(Inches(1), Inches(3.3), Inches(8), Inches(2))
+            vbf = vb.text_frame
+            vbf.word_wrap = True
+            vbf.text = verdict
+            vbp = vbf.paragraphs[0]
+            vbp.font.size = Pt(20)
+            vbp.alignment = PP_ALIGN.CENTER
+
+        prs.save(output_path)
+        logger.info("comparison_deck_generated", path=output_path, slides=len(prs.slides))
+        return output_path
+

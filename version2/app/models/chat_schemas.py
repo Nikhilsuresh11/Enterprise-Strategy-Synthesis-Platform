@@ -35,6 +35,14 @@ class ChatResponse(BaseModel):
         default=False,
         description="Whether enough context has been gathered"
     )
+    companies: List[str] = Field(
+        default=[],
+        description="Detected company names"
+    )
+    analysis_type: str = Field(
+        default="single",
+        description="'single' | 'comparison'"
+    )
 
 
 class StartAnalysisRequest(BaseModel):

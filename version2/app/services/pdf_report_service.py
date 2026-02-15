@@ -1,11 +1,12 @@
 """PDF Report Generation Service."""
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER
+from reportlab.lib import colors
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -161,3 +162,85 @@ class PDFReportService:
         doc.build(story)
         
         logger.info("pdf_report_generated", company=company_name, path=output_path)
+
+    async def generate_comparison_report(
+        self,
+        title: str,
+        companies: List[str],
+        comparison_data: Dict[str, Any],
+        output_path: str,
+    ):
+        """Generate a comparison PDF with side-by-side tables."""
+        logger.info("generating_comparison_pdf", companies=companies, path=output_path)
+
+        doc = SimpleDocTemplate(
+            output_path,
+            pagesize=letter,
+            rightMargin=50,
+            leftMargin=50,
+            topMargin=60,
+            bottomMargin=30,
+        )
+
+        story = []
+
+        # Title
+        story.append(Paragraph(title, self.styles["CustomTitle"]))
+        story.append(Spacer(1, 0.3 * inch))
+
+        # Each category → a table
+        categories = comparison_data.get("categories", [])
+
+        for cat in categories:
+            cat_name = cat.get("name", "")
+            rows_data = cat.get("rows", [])
+            if not rows_data:
+                continue
+
+            story.append(Paragraph(cat_name, self.styles["SectionHeading"]))
+
+            # Build header row
+            header = ["Metric"] + companies
+            table_rows = [header]
+
+            for row in rows_data:
+                metric = row.get("metric", "")
+                vals = [metric]
+                for i in range(len(companies)):
+                    vals.append(str(row.get(f"company_{i}", "N/A")))
+                table_rows.append(vals)
+
+            # Calculate column widths
+            avail = 6.5 * inch
+            metric_w = avail * 0.3
+            company_w = (avail * 0.7) / max(len(companies), 1)
+            col_widths = [metric_w] + [company_w] * len(companies)
+
+            t = Table(table_rows, colWidths=col_widths)
+            t.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1E40AF")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F3F4F6")]),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]))
+            story.append(t)
+            story.append(Spacer(1, 0.2 * inch))
+
+        # Verdict
+        verdict = comparison_data.get("verdict", "")
+        if verdict:
+            story.append(PageBreak())
+            story.append(Paragraph("Verdict", self.styles["SectionHeading"]))
+            story.append(Paragraph(verdict, self.styles["Normal"]))
+
+        doc.build(story)
+        logger.info("comparison_pdf_generated", path=output_path)
+
