@@ -189,12 +189,19 @@ async def download_file(file_path: str):
 # ==================== Entry Point ====================
 
 if __name__ == "__main__":
+    import os
     import uvicorn
+
+    # Render (and most cloud platforms) inject PORT as an env var.
+    # pydantic-settings reads it automatically via the `port` field,
+    # but we also do an explicit fallback here for safety.
+    port = int(os.environ.get("PORT", settings.port))
+    is_dev = settings.app_env == "development"
 
     uvicorn.run(
         "app.main:app",
         host=settings.api_host,
-        port=settings.port,
-        reload=True,
+        port=port,
+        reload=is_dev,          # Never reload in production
         log_level=settings.log_level.lower(),
     )
