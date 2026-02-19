@@ -31,35 +31,49 @@ class RAGService:
     def __init__(
         self,
         api_key: str,
-        environment: str,
+        environment: Optional[str],   # kept for compat, unused in Pinecone v3+
         index_name: str,
         cache: CacheService
     ):
-        self.pc = Pinecone(api_key=api_key)
         self.index_name = index_name
         self.cache = cache
-        
-        # Load Sentence Transformer model
-        logger.info("loading_embedding_model", model=EMBEDDING_MODEL_NAME)
-        self.embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
-        self.embedding_dim = EMBEDDING_DIM
-        
-        # Initialize or connect to index
         self.index = None
+        self.embedding_model = None
+        self.embedding_dim = EMBEDDING_DIM
+
+        # Initialize Pinecone client
+        try:
+            self.pc = Pinecone(api_key=api_key)
+        except Exception as e:
+            logger.error("pinecone_client_init_failed", error=str(e))
+            self.pc = None
+
+        # Load Sentence Transformer model — can be slow on first run
+        try:
+            logger.info("loading_embedding_model", model=EMBEDDING_MODEL_NAME)
+            self.embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+        except Exception as e:
+            logger.error("embedding_model_load_failed", error=str(e))
+
+        # Connect to Pinecone index
         self._initialize_index()
-        
+
         logger.info(
             "rag_service_initialized",
             index_name=index_name,
             embedding_model=EMBEDDING_MODEL_NAME,
             embedding_dim=EMBEDDING_DIM,
+            healthy=self.index is not None,
         )
     
     def _initialize_index(self):
-        """Initialize or connect to Pinecone index."""
+        """Initialize or connect to Pinecone index (non-fatal on failure)."""
+        if self.pc is None:
+            logger.warning("skipping_index_init_no_client")
+            return
         try:
             existing_indexes = self.pc.list_indexes()
-            
+
             if self.index_name not in [idx.name for idx in existing_indexes]:
                 logger.info("creating_pinecone_index", name=self.index_name)
                 self.pc.create_index(
@@ -68,13 +82,14 @@ class RAGService:
                     metric="cosine",
                     spec=ServerlessSpec(cloud="aws", region="us-east-1"),
                 )
-            
+
             self.index = self.pc.Index(self.index_name)
             logger.info("connected_to_index", name=self.index_name)
-            
+
         except Exception as e:
+            # Log and continue — RAG features will be disabled but the server stays up
             logger.error("index_initialization_failed", error=str(e))
-            raise
+            self.index = None
     
     # ──────────────── Embedding ────────────────
     
