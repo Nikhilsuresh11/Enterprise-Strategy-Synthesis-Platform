@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     
     # Vector Database
     pinecone_api_key: str
-    pinecone_environment: str
+    pinecone_environment: Optional[str] = None   # Deprecated in Pinecone v3+, kept for backward compat
     pinecone_index_name: str = "stratagem-knowledge"
     
     # App Settings
