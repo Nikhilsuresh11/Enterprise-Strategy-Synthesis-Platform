@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     jwt_expiration_minutes: int = 1440
     
     # CORS
-    allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+    allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000,*"
     
     # Model Settings
     default_model: str = "llama-3.3-70b-versatile"
