@@ -5,7 +5,6 @@ import asyncio
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from pinecone import Pinecone, ServerlessSpec
-from sentence_transformers import SentenceTransformer
 from pypdf import PdfReader
 from app.services.cache_service import CacheService
 from app.utils.logger import get_logger
@@ -48,13 +47,6 @@ class RAGService:
             logger.error("pinecone_client_init_failed", error=str(e))
             self.pc = None
 
-        # Load Sentence Transformer model — can be slow on first run
-        try:
-            logger.info("loading_embedding_model", model=EMBEDDING_MODEL_NAME)
-            self.embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
-        except Exception as e:
-            logger.error("embedding_model_load_failed", error=str(e))
-
         # Connect to Pinecone index
         self._initialize_index()
 
@@ -64,6 +56,7 @@ class RAGService:
             embedding_model=EMBEDDING_MODEL_NAME,
             embedding_dim=EMBEDDING_DIM,
             healthy=self.index is not None,
+            lazy_load_enabled=True,
         )
     
     def _initialize_index(self):
@@ -93,13 +86,24 @@ class RAGService:
     
     # ──────────────── Embedding ────────────────
     
+    def _get_embedding_model(self):
+        """Lazy load the embedding model to prevent memory spikes on startup."""
+        if self.embedding_model is None:
+            logger.info("lazy_loading_embedding_model", model=EMBEDDING_MODEL_NAME)
+            # We import here so it doesn't inflate memory during app startup
+            from sentence_transformers import SentenceTransformer
+            self.embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+        return self.embedding_model
+
     def _generate_embedding(self, text: str) -> List[float]:
         """Generate embedding using Sentence Transformers (sync)."""
-        return self.embedding_model.encode(text).tolist()
+        model = self._get_embedding_model()
+        return model.encode(text).tolist()
     
     def _generate_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings for a batch of texts."""
-        embeddings = self.embedding_model.encode(texts, show_progress_bar=False)
+        model = self._get_embedding_model()
+        embeddings = model.encode(texts, show_progress_bar=False)
         return [e.tolist() for e in embeddings]
     
     async def _async_embed(self, text: str) -> List[float]:
