@@ -12,12 +12,10 @@ from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
 
 # HTTP Bearer scheme for token extraction
 security = HTTPBearer()
-
 
 class AuthService:
     """
@@ -37,11 +35,15 @@ class AuthService:
     
     def hash_password(self, password: str) -> str:
         """Hash a password using bcrypt."""
-        return pwd_context.hash(password)
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
     
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         """Verify a password against its hash."""
-        return pwd_context.verify(plain_password, hashed_password)
+        try:
+            return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+        except ValueError:
+            return False
     
     def create_access_token(self, user_id: str, email: str) -> str:
         """

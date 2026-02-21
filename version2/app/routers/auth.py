@@ -26,20 +26,29 @@ async def register(request: Request, body: UserRegister):
             detail="An account with this email already exists"
         )
     
-    # Create user
-    hashed_pw = auth.hash_password(body.password)
-    user_data = {
-        "name": body.name,
-        "email": body.email.lower(),
-        "hashed_password": hashed_pw,
-    }
-    
-    user = await db.create_user(user_data)
-    
-    # Generate token
-    token = auth.create_access_token(user["_id"], user["email"])
-    
-    logger.info("user_registered", user_id=user["_id"], email=user["email"])
+    try:
+        # Create user
+        hashed_pw = auth.hash_password(body.password)
+        user_data = {
+            "name": body.name,
+            "email": body.email.lower(),
+            "hashed_password": hashed_pw,
+        }
+        
+        user = await db.create_user(user_data)
+        
+        # Generate token
+        token = auth.create_access_token(user["_id"], user["email"])
+        
+        logger.info("user_registered", user_id=user["_id"], email=user["email"])
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        logger.error(f"registration_error: {error_details}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(e)}"
+        )
     
     return TokenResponse(
         access_token=token,
@@ -67,17 +76,28 @@ async def login(request: Request, body: UserLogin):
             detail="Invalid email or password"
         )
     
-    # Verify password
-    if not auth.verify_password(body.password, user["hashed_password"]):
+    try:
+        # Verify password
+        if not auth.verify_password(body.password, user["hashed_password"]):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+        
+        # Generate token
+        token = auth.create_access_token(user["_id"], user["email"])
+        
+        logger.info("user_logged_in", user_id=user["_id"])
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        logger.error(f"login_error: {error_details}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Login failed: {str(e)}"
         )
-    
-    # Generate token
-    token = auth.create_access_token(user["_id"], user["email"])
-    
-    logger.info("user_logged_in", user_id=user["_id"])
     
     return TokenResponse(
         access_token=token,
