@@ -22,11 +22,11 @@ class Settings(BaseSettings):
         description="Default Groq model for complex reasoning"
     )
     groq_fast_model: str = Field(
-        default="llama-3-8b-8192",
+        default="llama-3.1-8b-instant",
         description="Fast Groq model for lightweight tasks"
     )
     openrouter_model: str = Field(
-        default="google/gemini-2.0-flash-exp:free",
+        default="google/gemma-4-26b-a4b-it:free",
         description="OpenRouter model to use as fallback"
     )
     openrouter_site_url: str = Field(

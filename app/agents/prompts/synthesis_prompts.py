@@ -16,16 +16,16 @@ Your task is to create **board-ready executive summaries** using the Situation-C
 {research_summary}
 
 ===== MARKET ANALYSIS =====
-• TAM: ${tam}M
-• SAM: ${sam}M  
-• SOM (Year 5): ${som}M
+• Total Addressable Market: ${tam} million
+• Serviceable Addressable Market: ${sam} million
+• Serviceable Obtainable Market (Year 5): ${som} million
 • Competitive Landscape: {competitive_summary}
 
 ===== FINANCIAL MODEL =====
-• Expected Revenue (Year 5): ${revenue_y5}M
-• LTV/CAC Ratio: {ltv_cac_ratio}x
+• Expected Revenue (Year 5): ${revenue_y5} million
+• Lifetime Value to Customer Acquisition Cost Ratio: {ltv_cac_ratio}x
 • Unit Economics: {unit_econ_assessment}
-• Valuation (DCF): ${valuation}M
+• Valuation (Discounted Cash Flow): ${valuation} million
 
 ===== REGULATORY ASSESSMENT =====
 • Overall Risk Level: {regulatory_risk}

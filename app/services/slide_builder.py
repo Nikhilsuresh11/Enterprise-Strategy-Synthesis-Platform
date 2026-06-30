@@ -149,15 +149,15 @@ class SlideBuilder:
         som_tam_ratio = (som/tam*100) if tam > 0 else 0
         
         content = [
-            f"**Market represents ${tam:,.0f}M opportunity with realistic ${som:,.0f}M Year 5 target**",
+            f"**Market represents ${tam:,.0f} million opportunity with realistic ${som:,.0f} million Year 5 target**",
             "",
             "**MARKET SIZING (Multi-Method Validation):**",
-            f"• Total Addressable Market (TAM): ${tam:,.0f}M",
-            f"• Serviceable Addressable Market (SAM): ${sam:,.0f}M ({sam_tam_ratio:.0f}% of TAM)",
-            f"• Serviceable Obtainable Market (SOM, Y5): ${som:,.0f}M ({som_tam_ratio:.1f}% of TAM)",
+            f"• Total Addressable Market: ${tam:,.0f} million",
+            f"• Serviceable Addressable Market: ${sam:,.0f} million ({sam_tam_ratio:.0f}% of Total Market)",
+            f"• Serviceable Obtainable Market (Year 5): ${som:,.0f} million ({som_tam_ratio:.1f}% of Total Market)",
             "",
             "**SO WHAT?**",
-            f"• Target market size supports {som:,.0f}M revenue by Year 5",
+            f"• Target market size supports ${som:,.0f} million revenue by Year 5",
             f"• Conservative penetration assumptions de-risk projections",
             f"• Market growth trajectory validates investment thesis"
         ]
@@ -165,7 +165,7 @@ class SlideBuilder:
         return {
             "slide_number": 4,
             "type": "chart",
-            "title": "Market Opportunity: $" + f"{som:,.0f}M Realistic Target by Year 5",
+            "title": "Market Opportunity: $" + f"{som:,.0f} Million Realistic Target by Year 5",
             "content": content,
             "chart_data": json.loads(chart_json) if isinstance(chart_json, str) else chart_json,
             "speaker_notes": "Market sizing validated through top-down (industry reports), bottom-up (customer segments), and value theory approaches. Conservative assumptions applied throughout."
@@ -188,16 +188,16 @@ class SlideBuilder:
             expected_value = base[-1] if base else 0
         
         content = [
-            f"**Expected value of ${expected_value:,.0f}M incorporates upside and downside scenarios**",
+            f"**Expected value of ${expected_value:,.0f} million incorporates upside and downside scenarios**",
             "",
             "**SCENARIO ANALYSIS (Probability-Weighted):**",
-            f"• **Base Case (50%):** ${base[-1]:,.0f}M revenue by Year 5" if base else "",
-            f"• **Upside Case (25%):** ${upside[-1]:,.0f}M with accelerated adoption" if upside else "",
-            f"• **Downside Case (25%):** ${downside[-1]:,.0f}M if market headwinds" if downside else "",
+            f"• **Base Case (50%):** ${base[-1]:,.0f} million revenue by Year 5" if base else "",
+            f"• **Upside Case (25%):** ${upside[-1]:,.0f} million with accelerated adoption" if upside else "",
+            f"• **Downside Case (25%):** ${downside[-1]:,.0f} million if market headwinds" if downside else "",
             "",
             "**SO WHAT?**",
-            f"• Even downside scenario delivers ${downside[-1]:,.0f}M revenue" if downside else "",
-            f"• Upside potential of ${upside[-1]:,.0f}M if execution excellence" if upside else "",
+            f"• Even downside scenario delivers ${downside[-1]:,.0f} million revenue" if downside else "",
+            f"• Upside potential of ${upside[-1]:,.0f} million if execution excellence" if upside else "",
             f"• Risk-adjusted return profile remains attractive"
         ]
         
@@ -206,7 +206,7 @@ class SlideBuilder:
         return {
             "slide_number": 8,
             "type": "chart",
-            "title": f"Revenue Scenarios: ${expected_value:,.0f}M Expected Value",
+            "title": f"Revenue Scenarios: ${expected_value:,.0f} Million Expected Value",
             "content": content,
             "chart_data": json.loads(chart_json) if isinstance(chart_json, str) else chart_json,
             "speaker_notes": "Three scenarios modeled with sensitivity analysis on key drivers: market penetration rate, pricing power, and competitive intensity. Monte Carlo simulation validates probability distribution."
@@ -343,6 +343,17 @@ class SlideBuilder:
         
         # Slide 5: Competitive Position (Complication)
         comp_pos = financial_model.get('competitive_position', {})
+        
+        # Extract differentiators - handle both string and dict formats
+        differentiators = []
+        for d in comp_pos.get('key_differentiators', [])[:4]:
+            if isinstance(d, dict):
+                # Extract meaningful text from dictionary
+                diff_text = d.get('differentiator', d.get('description', str(d)))
+                differentiators.append(diff_text)
+            else:
+                differentiators.append(str(d))
+        
         slides.append({
             "slide_number": 5,
             "type": "content",
@@ -352,8 +363,8 @@ class SlideBuilder:
                 "",
                 f"**STRATEGIC POSITIONING:** {comp_pos.get('positioning', 'Unknown').title()}",
                 "",
-                "**KEY DIFFERENTIATORS (MECE):**",
-                *[f"• {d}" for d in comp_pos.get('key_differentiators', [])[:4]],
+                "**KEY DIFFERENTIATORS:**",
+                *[f"• {d}" for d in differentiators],
                 "",
                 "**SO WHAT?**",
                 f"• Differentiation supports premium pricing and {comp_pos.get('market_share_estimate', 0)*100:.1f}% share target",
@@ -369,14 +380,14 @@ class SlideBuilder:
         slides.append({
             "slide_number": 6,
             "type": "content",
-            "title": f"Unit Economics: {ltv_cac:.1f}x LTV/CAC Ratio Validates Business Model",
+            "title": f"Unit Economics: {ltv_cac:.1f}x Lifetime Value to Customer Acquisition Cost Ratio Validates Business Model",
             "content": [
-                f"**Strong unit economics with {ltv_cac:.1f}x LTV/CAC ratio (>3x benchmark)**",
+                f"**Strong unit economics with {ltv_cac:.1f}x ratio (exceeds 3x benchmark)**",
                 "",
                 "**UNIT ECONOMICS:**",
-                f"• Customer Acquisition Cost (CAC): ${unit_econ.get('CAC', 0):,.0f}",
-                f"• Lifetime Value (LTV): ${unit_econ.get('LTV', 0):,.0f}",
-                f"• LTV/CAC Ratio: {ltv_cac:.2f}x",
+                f"• Customer Acquisition Cost: ${unit_econ.get('CAC', 0):,.0f}",
+                f"• Lifetime Value: ${unit_econ.get('LTV', 0):,.0f}",
+                f"• Lifetime Value / Customer Acquisition Cost Ratio: {ltv_cac:.2f}x",
                 f"• Payback Period: {unit_econ.get('payback_months', 12)} months",
                 "",
                 "**SO WHAT?**",
@@ -385,7 +396,7 @@ class SlideBuilder:
                 "• Economics support aggressive customer acquisition strategy"
             ],
             "chart_data": None,
-            "speaker_notes": "Unit economics analysis based on cohort data and industry benchmarks. LTV calculated using 5-year customer lifetime with conservative churn assumptions. CAC includes fully-loaded sales and marketing costs."
+            "speaker_notes": "Unit economics analysis based on cohort data and industry benchmarks. Lifetime Value calculated using 5-year customer lifetime with conservative churn assumptions. Customer Acquisition Cost includes fully-loaded sales and marketing costs."
         })
         
         # Slide 7: Financial Projections
@@ -393,23 +404,23 @@ class SlideBuilder:
         slides.append({
             "slide_number": 7,
             "type": "content",
-            "title": f"Financial Outlook: ${valuation:,.0f}M Enterprise Value",
+            "title": f"Financial Outlook: ${valuation:,.0f} Million Enterprise Value",
             "content": [
-                f"**DCF valuation of ${valuation:,.0f}M supports investment thesis**",
+                f"**Discounted Cash Flow valuation of ${valuation:,.0f} million supports investment thesis**",
                 "",
                 "**FINANCIAL HIGHLIGHTS:**",
-                f"• Enterprise Value (DCF): ${valuation:,.0f}M",
-                f"• LTV/CAC Ratio: {ltv_cac:.1f}x (>3x benchmark)",
-                f"• Total Addressable Market: ${tam:,.0f}M",
-                f"• Year 5 Revenue Target: ${som:,.0f}M",
+                f"• Enterprise Value (Discounted Cash Flow): ${valuation:,.0f} million",
+                f"• Lifetime Value to Customer Acquisition Cost Ratio: {ltv_cac:.1f}x (exceeds 3x benchmark)",
+                f"• Total Addressable Market: ${tam:,.0f} million",
+                f"• Year 5 Revenue Target: ${som:,.0f} million",
                 "",
                 "**SO WHAT?**",
                 "• Strong unit economics enable profitable scaling",
-                "• Large TAM provides multi-year growth runway",
+                "• Large market provides multi-year growth runway",
                 "• Clear path to profitability within 24-36 months"
             ],
             "chart_data": None,
-            "speaker_notes": "Financial analysis demonstrates attractive risk-adjusted returns. DCF uses 10% WACC with terminal growth rate of 3%. Sensitivity analysis shows valuation range of +/- 25% under reasonable assumption variations."
+            "speaker_notes": "Financial analysis demonstrates attractive risk-adjusted returns. Discounted Cash Flow uses 10% weighted average cost of capital with terminal growth rate of 3%. Sensitivity analysis shows valuation range of +/- 25% under reasonable assumption variations."
         })
         
         # Slide 8: Scenarios
@@ -544,13 +555,13 @@ class SlideBuilder:
     ) -> Dict[str, Any]:
         """Create market sizing slide with funnel chart."""
         content = [
-            f"**Total Addressable Market (TAM):** ${tam:,.0f}M",
-            f"**Serviceable Addressable Market (SAM):** ${sam:,.0f}M",
-            f"**Serviceable Obtainable Market (SOM, Year 5):** ${som:,.0f}M",
+            f"**Total Addressable Market:** ${tam:,.0f} million",
+            f"**Serviceable Addressable Market:** ${sam:,.0f} million",
+            f"**Serviceable Obtainable Market (Year 5):** ${som:,.0f} million",
             "",
             f"• Target represents {(som/tam*100):.1f}% of total market" if tam > 0 else "• Target market size calculated",
             f"• Realistic penetration based on competitive analysis",
-            f"• SAM represents {(sam/tam*100):.0f}% of TAM based on geographic/segment focus" if tam > 0 else "• SAM calculated based on geographic/segment focus"
+            f"• Serviceable market represents {(sam/tam*100):.0f}% of total market based on geographic/segment focus" if tam > 0 else "• Serviceable market calculated based on geographic/segment focus"
         ]
         
         return {
@@ -575,9 +586,9 @@ class SlideBuilder:
         content = [
             "**Three scenarios modeled with probability-weighted outcomes:**",
             "",
-            f"• **Base Case (50% probability):** ${base[-1]:,.0f}M revenue by Year 5" if base else "",
-            f"• **Upside Case (25% probability):** ${upside[-1]:,.0f}M revenue by Year 5" if upside else "",
-            f"• **Downside Case (25% probability):** ${downside[-1]:,.0f}M revenue by Year 5" if downside else "",
+            f"• **Base Case (50% probability):** ${base[-1]:,.0f} million revenue by Year 5" if base else "",
+            f"• **Upside Case (25% probability):** ${upside[-1]:,.0f} million revenue by Year 5" if upside else "",
+            f"• **Downside Case (25% probability):** ${downside[-1]:,.0f} million revenue by Year 5" if downside else "",
             "",
             "• Expected value incorporates all scenarios",
             "• Sensitivity analysis conducted on key assumptions"
@@ -721,6 +732,17 @@ class SlideBuilder:
         
         # Slide 5: Competitive Position
         comp_pos = financial_model.get('competitive_position', {})
+        
+        # Extract differentiators - handle both string and dict formats
+        differentiators = []
+        for d in comp_pos.get('key_differentiators', [])[:4]:
+            if isinstance(d, dict):
+                # Extract meaningful text from dictionary
+                diff_text = d.get('differentiator', d.get('description', str(d)))
+                differentiators.append(diff_text)
+            else:
+                differentiators.append(str(d))
+        
         slides.append({
             "slide_number": 5,
             "type": "content",
@@ -730,7 +752,7 @@ class SlideBuilder:
                 f"**Target Market Share:** {comp_pos.get('market_share_estimate', 0)*100:.1f}%",
                 "",
                 "**Key Differentiators:**",
-                *[f"• {d}" for d in comp_pos.get('key_differentiators', [])[:4]]
+                *[f"• {d}" for d in differentiators]
             ],
             "chart_data": None,
             "speaker_notes": "Competitive positioning based on market analysis and strategic capabilities."
@@ -738,16 +760,28 @@ class SlideBuilder:
         
         # Slide 6: Unit Economics
         unit_econ = financial_model.get('unit_economics', {})
+        ltv_cac_ratio = unit_econ.get('LTV_CAC_ratio', 0)
+        
+        # Determine assessment without showing "FALLBACK"
+        assessment = unit_econ.get('assessment', 'Unknown')
+        if assessment == 'FALLBACK':
+            if ltv_cac_ratio >= 3.0:
+                assessment = 'Healthy'
+            elif ltv_cac_ratio >= 1.5:
+                assessment = 'Acceptable'
+            else:
+                assessment = 'Needs Improvement'
+        
         slides.append({
             "slide_number": 6,
             "type": "content",
             "title": "Unit Economics",
             "content": [
-                f"**Customer Acquisition Cost (CAC):** ${unit_econ.get('CAC', 0):.2f}",
-                f"**Lifetime Value (LTV):** ${unit_econ.get('LTV', 0):.2f}",
-                f"**LTV/CAC Ratio:** {unit_econ.get('LTV_CAC_ratio', 0):.2f}x",
+                f"**Customer Acquisition Cost:** ${unit_econ.get('CAC', 0):.2f}",
+                f"**Lifetime Value:** ${unit_econ.get('LTV', 0):.2f}",
+                f"**Lifetime Value / Customer Acquisition Cost Ratio:** {ltv_cac_ratio:.2f}x",
                 "",
-                f"**Assessment:** {unit_econ.get('assessment', 'Unknown').upper()}",
+                f"**Assessment:** {assessment.upper()}",
                 "",
                 "• Healthy unit economics support sustainable growth",
                 "• Ratio exceeds 3:1 benchmark for viable business model"
@@ -762,11 +796,11 @@ class SlideBuilder:
             "type": "content",
             "title": "Financial Highlights",
             "content": [
-                f"**Valuation (DCF):** ${financial_model.get('valuation', {}).get('enterprise_value', 0):,.0f}M",
+                f"**Valuation (Discounted Cash Flow):** ${financial_model.get('valuation', {}).get('enterprise_value', 0):,.0f} million",
                 "",
                 "**Key Metrics:**",
-                f"• Strong unit economics ({unit_econ.get('LTV_CAC_ratio', 0):.1f}x LTV/CAC)",
-                f"• Attractive market size (${tam:,.0f}M TAM)",
+                f"• Strong unit economics ({unit_econ.get('LTV_CAC_ratio', 0):.1f}x Lifetime Value to Customer Acquisition Cost)",
+                f"• Attractive market size (${tam:,.0f} million Total Addressable Market)",
                 f"• Clear path to profitability"
             ],
             "chart_data": None,

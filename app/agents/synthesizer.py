@@ -248,10 +248,10 @@ class SynthesizerAgent:
             sam = market_analysis.get('SAM', {}).get('value_usd_millions', 0)
             som = market_analysis.get('SOM', {}).get('year_5_usd_millions', 0)
             
-            narrative = f"The market opportunity represents a Total Addressable Market of ${tam:,.0f}M, "
-            narrative += f"with a Serviceable Addressable Market of ${sam:,.0f}M. "
+            narrative = f"The market opportunity represents a Total Addressable Market of ${tam:,.0f} million, "
+            narrative += f"with a Serviceable Addressable Market of ${sam:,.0f} million. "
             narrative += f"Based on competitive dynamics and realistic penetration assumptions, "
-            narrative += f"the Serviceable Obtainable Market is estimated at ${som:,.0f}M by Year 5. "
+            narrative += f"the Serviceable Obtainable Market is estimated at ${som:,.0f} million by Year 5. "
             narrative += "This represents a significant and achievable market opportunity."
             
             return narrative
@@ -279,10 +279,10 @@ class SynthesizerAgent:
             scenarios = financial_model.get('scenarios', {})
             base_y5 = scenarios.get('base', [0])[-1] if scenarios.get('base') else 0
             
-            narrative = f"The financial model demonstrates strong unit economics with an LTV/CAC ratio of {ltv_cac:.1f}x, "
+            narrative = f"The financial model demonstrates strong unit economics with a Lifetime Value to Customer Acquisition Cost ratio of {ltv_cac:.1f}x, "
             narrative += "well above the 3:1 benchmark for sustainable growth. "
-            narrative += f"Base case projections show revenue reaching ${base_y5:,.0f}M by Year 5. "
-            narrative += f"DCF valuation yields an enterprise value of ${valuation:,.0f}M, "
+            narrative += f"Base case projections show revenue reaching ${base_y5:,.0f} million by Year 5. "
+            narrative += f"Discounted Cash Flow valuation yields an enterprise value of ${valuation:,.0f} million, "
             narrative += "indicating attractive returns for investors."
             
             return narrative
@@ -409,13 +409,13 @@ class SynthesizerAgent:
                     "frequency": "quarterly"
                 },
                 {
-                    "metric": "Customer Acquisition Cost (CAC)",
+                    "metric": "Customer Acquisition Cost",
                     "type": "leading",
                     "target": f"${financial_model.get('unit_economics', {}).get('CAC', 200):.0f}",
                     "frequency": "monthly"
                 },
                 {
-                    "metric": "LTV/CAC Ratio",
+                    "metric": "Lifetime Value to Customer Acquisition Cost Ratio",
                     "type": "leading",
                     "target": ">3.0x",
                     "frequency": "monthly"
